@@ -38,7 +38,7 @@ public class LinhasService {
       }
 
       public void salvaLinhasBanco() {
-
+            logger.info("Iniciando sincronização de linhas");
             List<LinhaDTO> listaLinhasNovas = apiService.getLinhasAPIBH();
 
             // Busca as linhas já existentes no banco

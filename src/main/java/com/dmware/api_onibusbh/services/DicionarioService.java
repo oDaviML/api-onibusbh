@@ -40,6 +40,7 @@ public class DicionarioService {
 
       public void salvarDicionarioBanco() {
             logger.info("Iniciando sincronização dicionário");
+
             List<DicionarioDTO> listaDados = apiService.getDicionarioAPIBH();
             List<DicionarioEntity> dadosExistentes = dicionarioRepository.findAll();
             logger.info("Dados existentes no banco de dados: " + dadosExistentes.size());
@@ -64,7 +65,7 @@ public class DicionarioService {
                   }
             }
 
-            // Salva apenas as linhas que foram novas ou atualizadas
+            // Salva apenas os dados que forem novos ou atualizados
             if (!dadosParaSalvar.isEmpty()) {
                   logger.info("Dicionário novo ou atualizados: " + dadosParaSalvar.size());
                   dicionarioRepository
