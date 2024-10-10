@@ -23,8 +23,7 @@ public class DicionarioController {
       @GetMapping("/")
       public ResponseEntity<List<DicionarioDTO>> listarDicionario()
                   throws JsonMappingException, JsonProcessingException {
-
-            return null;
+            return ResponseEntity.ok().body(dicionarioService.fetchDicionarios());
       }
 
 }
