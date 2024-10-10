@@ -16,7 +16,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class LinhaDTO {
       @JsonIgnore
-      private Long id;
+      private String id;
 
       @JsonProperty("_id")
       private Long idLinha;

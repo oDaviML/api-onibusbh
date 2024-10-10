@@ -3,7 +3,7 @@ package com.dmware.api_onibusbh.entities;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document("Linhas")
+@Document("linhas")
 public class LinhaEntity {
 
       @Id
