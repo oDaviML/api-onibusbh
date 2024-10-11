@@ -1,5 +1,20 @@
 package com.dmware.api_onibusbh.services;
 
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.stereotype.Service;
+
 import com.dmware.api_onibusbh.config.WebClientConfig;
 import com.dmware.api_onibusbh.dto.DicionarioDTO;
 import com.dmware.api_onibusbh.dto.LinhaDTO;
@@ -7,20 +22,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
-import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
+import reactor.core.publisher.Flux;
 
 @Service
 public class APIService {
@@ -84,7 +87,7 @@ public class APIService {
     public void getOnibusCoordenadaBH() {
         logger.info("Iniciando sincronização de coordenadas");
 
-        // Consome API PBH para buscar coordenadas e realizar o download do arquivo
+        // Consome a API PBH para buscar coordenadas e realizar o download do arquivo
         // .json
         Flux<DataBuffer> dataBufferFlux = webClientConfig.webClient().get()
                 .uri("https://temporeal.pbh.gov.br/?param=D")
@@ -98,19 +101,22 @@ public class APIService {
             try {
                 Files.createDirectories(directory);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Erro ao criar diretório", e);
             }
         }
 
         Path path = directory.resolve("coordenadas.json");
 
-        try (FileOutputStream outputStream = new FileOutputStream(path.toFile())) {
-            // Converte os dados do buffer para bytes e escreve no arquivo
-            DataBufferUtils.write(dataBufferFlux, outputStream.getChannel())
+        try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+                StandardOpenOption.TRUNCATE_EXISTING)) {
+            DataBufferUtils.write(dataBufferFlux, fileChannel)
                     .doOnComplete(() -> logger.info("Sincronização de coordenadas concluída"))
-                    .blockLast(); // Garantir que o processo seja bloqueante e termine antes de prosseguir
+                    .doOnError(error -> logger.error("Erro durante a escrita das coordenadas", error))
+                    .blockLast(); // Bloqueia até que o fluxo seja processado
         } catch (IOException e) {
             logger.error("Erro ao tentar sincronizar as coordenadas", e);
+        } catch (Exception e) {
+            logger.error("Erro inesperado", e);
         }
     }
 

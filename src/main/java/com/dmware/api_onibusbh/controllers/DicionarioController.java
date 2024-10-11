@@ -21,8 +21,7 @@ public class DicionarioController {
       private DicionarioService dicionarioService;
 
       @GetMapping("/")
-      public ResponseEntity<List<DicionarioDTO>> listarDicionario()
-                  throws JsonMappingException, JsonProcessingException {
+      public ResponseEntity<List<DicionarioDTO>> listarDicionario() {
             return ResponseEntity.ok().body(dicionarioService.fetchDicionarios());
       }
 
