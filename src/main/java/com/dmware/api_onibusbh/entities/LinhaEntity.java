@@ -9,12 +9,12 @@ public class LinhaEntity {
       @Id
       private String id;
       // TODO: Adicionar tipo (BH OU Metropolitano)
-      private Long idLinha;
-      private Long numeroLinha;
+      private Integer idLinha;
+      private Integer numeroLinha;
       private String linha;
       private String nome;
 
-      public LinhaEntity(String id, Long idLinha, Long numeroLinha, String linha, String nome) {
+      public LinhaEntity(String id, Integer idLinha, Integer numeroLinha, String linha, String nome) {
             this.id = id;
             this.idLinha = idLinha;
             this.numeroLinha = numeroLinha;
@@ -33,19 +33,19 @@ public class LinhaEntity {
             this.id = id;
       }
 
-      public Long getIdLinha() {
+      public Integer getIdLinha() {
             return idLinha;
       }
 
-      public void setIdLinha(Long idLinha) {
+      public void setIdLinha(Integer idLinha) {
             this.idLinha = idLinha;
       }
 
-      public Long getNumeroLinha() {
+      public Integer getNumeroLinha() {
             return numeroLinha;
       }
 
-      public void setNumeroLinha(Long numeroLinha) {
+      public void setNumeroLinha(Integer numeroLinha) {
             this.numeroLinha = numeroLinha;
       }
 

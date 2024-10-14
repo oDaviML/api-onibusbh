@@ -4,8 +4,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OnibusDTO {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class CoordenadaDTO {
 
       @JsonIgnore
       private String id;
@@ -27,5 +36,12 @@ public class OnibusDTO {
 
       @JsonProperty("SV")
       private Character sentido;
+
+      @Override
+      public String toString() {
+            return "OnibusDTO [id=" + id + ", idOnibus=" + idOnibus + ", numeroVeiculo="
+                        + numeroVeiculo + ", latitude=" + latitude + ", longitude=" + longitude + ", velocidade="
+                        + velocidade + ", sentido=" + sentido + "]";
+      }
 
 }

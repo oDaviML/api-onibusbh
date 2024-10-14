@@ -19,10 +19,10 @@ public class LinhaDTO {
       private String id;
 
       @JsonProperty("_id")
-      private Long idLinha;
+      private Integer idLinha;
 
       @JsonProperty("NumeroLinha")
-      private Long numeroLinha;
+      private Integer numeroLinha;
 
       @JsonProperty("Linha")
       @JsonDeserialize(using = TrimStringDeserializer.class)

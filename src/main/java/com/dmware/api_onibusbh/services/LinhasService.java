@@ -49,7 +49,7 @@ public class LinhasService {
             List<LinhaDTO> linhasParaSalvar = new ArrayList<>();
 
             // Mapeia as linhas existentes para um Map por idLinha, para fácil comparação
-            Map<Long, LinhaEntity> linhasExistentesMap = linhasExistentes.stream()
+            Map<Integer, LinhaEntity> linhasExistentesMap = linhasExistentes.stream()
                         .collect(Collectors.toMap(LinhaEntity::getIdLinha, linha -> linha));
 
             // Verifica as linhas novas
