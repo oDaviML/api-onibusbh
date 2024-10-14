@@ -25,18 +25,19 @@ public class OnibusService {
       public List<OnibusDTO> fetchOnibus() {
             List<LinhaDTO> linhas = linhasService.fetchLinhas();
             List<CoordenadaDTO> coordenadas = coordenadaService.fetchCoordenadas();
-            List<OnibusDTO> listaOnibus = new ArrayList<>();
-            linhas.forEach(linha -> {
-                  OnibusDTO onibus = new OnibusDTO();
-                  onibus.setIdLinha(linha.getNumeroLinha());
-                  onibus.setNomeLinha(linha.getNome());
-                  onibus.setLinha(linha.getLinha());
-                  onibus.setCoordenadas(coordenadas.stream()
-                              .filter(coord -> Objects.equals(coord.getIdOnibus(), linha.getNumeroLinha()))
-                              .collect(Collectors.toList()));
-
-                  listaOnibus.add(onibus);
-            });
+            List<OnibusDTO> listaOnibus = linhas.stream()
+                        .map(linha -> {
+                              OnibusDTO onibus = new OnibusDTO();
+                              onibus.setIdLinha(linha.getNumeroLinha());
+                              onibus.setNomeLinha(linha.getNome());
+                              onibus.setLinha(linha.getLinha());
+                              onibus.setCoordenadas(coordenadas.stream()
+                                          .filter(coord -> Objects.equals(coord.getIdOnibus(), linha.getNumeroLinha()))
+                                          .collect(Collectors.toList()));
+                              return onibus;
+                        })
+                        .filter(onibus -> !onibus.getCoordenadas().isEmpty())
+                        .collect(Collectors.toList());
 
             return listaOnibus;
       };

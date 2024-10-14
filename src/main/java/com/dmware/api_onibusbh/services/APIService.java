@@ -92,7 +92,8 @@ public class APIService {
         Flux<DataBuffer> dataBufferFlux = webClientConfig.webClient().get()
                 .uri("https://temporeal.pbh.gov.br/?param=D")
                 .retrieve()
-                .bodyToFlux(DataBuffer.class);
+                .bodyToFlux(DataBuffer.class)
+                .doOnNext(DataBufferUtils::release); // Libera os DataBuffers após uso
 
         Path directory = Paths.get("src/data/coordenadas");
 
