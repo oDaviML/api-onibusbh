@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.dmware.api_onibusbh.dto.DicionarioDTO;
 import com.dmware.api_onibusbh.services.DicionarioService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 
 @Controller
 @RequestMapping(path = "/api/v1/dicionario")
