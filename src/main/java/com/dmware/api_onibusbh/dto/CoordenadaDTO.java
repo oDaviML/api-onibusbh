@@ -37,6 +37,8 @@ public class CoordenadaDTO {
       @JsonProperty("SV")
       private Character sentido;
 
+      // TODO: Adicionar tipo data (HR)
+
       @Override
       public String toString() {
             return "OnibusDTO [id=" + id + ", idOnibus=" + idOnibus + ", numeroVeiculo="
