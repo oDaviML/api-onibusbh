@@ -27,7 +27,7 @@ public class CoordenadaDTO {
       private Integer idOnibus;
 
       @JsonProperty("NV")
-      private Integer numeroVeiculo;
+      private String numeroVeiculo;
 
       @JsonProperty("LT")
       private Double latitude;
