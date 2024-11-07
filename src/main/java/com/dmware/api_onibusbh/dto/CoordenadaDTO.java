@@ -1,8 +1,12 @@
 package com.dmware.api_onibusbh.dto;
 
+import java.time.LocalDateTime;
+
+import com.dmware.api_onibusbh.utils.DateDeserializer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -37,13 +41,15 @@ public class CoordenadaDTO {
       @JsonProperty("SV")
       private Character sentido;
 
-      // TODO: Adicionar tipo data (HR)
+      @JsonProperty("HR")
+      @JsonDeserialize(using = DateDeserializer.class)
+      private LocalDateTime horario;
 
       @Override
       public String toString() {
-            return "OnibusDTO [id=" + id + ", idOnibus=" + idOnibus + ", numeroVeiculo="
-                        + numeroVeiculo + ", latitude=" + latitude + ", longitude=" + longitude + ", velocidade="
-                        + velocidade + ", sentido=" + sentido + "]";
+            return "CoordenadaDTO [id=" + id + ", idOnibus=" + idOnibus + ", numeroVeiculo=" + numeroVeiculo
+                        + ", latitude=" + latitude + ", longitude=" + longitude + ", velocidade=" + velocidade
+                        + ", sentido=" + sentido + ", horario=" + horario + "]";
       }
 
 }
