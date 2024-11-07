@@ -24,8 +24,6 @@ public class OnibusService {
       private CoordenadaService coordenadaService;
 
       public List<OnibusDTO> fetchOnibus() {
-            // TODO: Filtrar onibus do mesmo número de ordem pelo horário (Pegar sempre o
-            // mais recente)
             List<LinhaDTO> linhas = linhasService.fetchLinhas();
             List<CoordenadaDTO> coordenadas = coordenadaService.fetchCoordenadas();
             List<OnibusDTO> listaOnibus = new ArrayList<>();

@@ -85,6 +85,7 @@ public class APIService {
     }
 
     public void getOnibusCoordenadaBH() {
+        // TODO: Implementar tratamento de erros ao salvar, afim de evitar consultas a json vazios
         logger.info("Iniciando sincronização de coordenadas");
 
         // Consome a API PBH para buscar coordenadas e realizar o download do arquivo
