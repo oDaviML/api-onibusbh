@@ -5,6 +5,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 
@@ -16,6 +17,7 @@ import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.stereotype.Service;
 
 import com.dmware.api_onibusbh.config.WebClientConfig;
+import com.dmware.api_onibusbh.dto.CoordenadaDTO;
 import com.dmware.api_onibusbh.dto.DicionarioDTO;
 import com.dmware.api_onibusbh.dto.LinhaDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -32,8 +34,11 @@ public class APIService {
     private WebClientConfig webClientConfig;
 
     ObjectMapper objectMapper = new ObjectMapper();
-
     private static final Logger logger = LoggerFactory.getLogger(APIService.class);
+
+    private static final String BASE_PATH = "src/data/coordenadas";
+    private static final String FILE_NAME = "coordenadas.json";
+    private static final String TEMP_FILE_NAME = "coordenadas_temp.json";
 
     public List<DicionarioDTO> getDicionarioAPIBH() {
         List<DicionarioDTO> dicionarios;
@@ -85,40 +90,79 @@ public class APIService {
     }
 
     public void getOnibusCoordenadaBH() {
-        // TODO: Implementar tratamento de erros ao salvar, afim de evitar consultas a json vazios
         logger.info("Iniciando sincronização de coordenadas");
 
-        // Consome a API PBH para buscar coordenadas e realizar o download do arquivo
-        // .json
-        Flux<DataBuffer> dataBufferFlux = webClientConfig.webClient().get()
-                .uri("https://temporeal.pbh.gov.br/?param=D")
-                .retrieve()
-                .bodyToFlux(DataBuffer.class)
-                .doOnNext(DataBufferUtils::release); // Libera os DataBuffers após uso
+        Path directory = Paths.get(BASE_PATH);
+        Path tempFile = directory.resolve(TEMP_FILE_NAME);
+        Path targetFile = directory.resolve(FILE_NAME);
 
-        Path directory = Paths.get("src/data/coordenadas");
+        try {
+            // Cria diretório se não existir
+            Files.createDirectories(directory);
 
-        // Verifica se o diretório de destino existe, se não, cria-o
-        if (Files.notExists(directory)) {
-            try {
-                Files.createDirectories(directory);
-            } catch (IOException e) {
-                throw new RuntimeException("Erro ao criar diretório", e);
+            // Busca dados da API e salva em arquivo temporário
+            Flux<DataBuffer> dataBufferFlux = webClientConfig.webClient().get()
+                    .uri("https://temporeal.pbh.gov.br/?param=D")
+                    .retrieve()
+                    .bodyToFlux(DataBuffer.class)
+                    .doOnNext(DataBufferUtils::release);
+
+            // Salva em arquivo temporário
+            try (FileChannel fileChannel = FileChannel.open(tempFile,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.WRITE,
+                    StandardOpenOption.TRUNCATE_EXISTING)) {
+
+                DataBufferUtils.write(dataBufferFlux, fileChannel)
+                        .doOnError(error -> {
+                            logger.error("Erro durante a escrita do arquivo temporário", error);
+                            try {
+                                Files.deleteIfExists(tempFile);
+                            } catch (IOException e) {
+                                logger.error("Erro ao tentar deletar arquivo temporário", e);
+                            }
+                        })
+                        .blockLast();
             }
+
+            // Valida se o arquivo temporário contém JSON válido e não está vazio
+            if (!isValidJsonFile(tempFile)) {
+                throw new IllegalStateException("Arquivo temporário contém JSON inválido ou vazio");
+            }
+
+            // Move o arquivo temporário para o arquivo final de forma atômica
+            Files.move(tempFile, targetFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            logger.info("Sincronização de coordenadas concluída com sucesso");
+
+        } catch (IOException | IllegalStateException e) {
+            logger.error("Erro durante a sincronização de coordenadas", e);
+            try {
+                Files.deleteIfExists(tempFile);
+            } catch (IOException ioE) {
+                logger.error("Erro ao tentar deletar arquivo temporário após falha", ioE);
+            }
+            throw new RuntimeException("Erro ao sincronizar coordenadas", e);
         }
+    }
 
-        Path path = directory.resolve("coordenadas.json");
+    private boolean isValidJsonFile(Path file) {
+        try {
+            String content = Files.readString(file);
+            if (content.trim().isEmpty()) {
+                return false;
+            }
 
-        try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
-                StandardOpenOption.TRUNCATE_EXISTING)) {
-            DataBufferUtils.write(dataBufferFlux, fileChannel)
-                    .doOnComplete(() -> logger.info("Sincronização de coordenadas concluída"))
-                    .doOnError(error -> logger.error("Erro durante a escrita das coordenadas", error))
-                    .blockLast(); // Bloqueia até que o fluxo seja processado
+            // Tenta ler como lista de CoordenadaDTO
+            List<CoordenadaDTO> coordenadas = objectMapper.readValue(
+                    content,
+                    new TypeReference<List<CoordenadaDTO>>() {
+                    });
+
+            return !coordenadas.isEmpty();
+
         } catch (IOException e) {
-            logger.error("Erro ao tentar sincronizar as coordenadas", e);
-        } catch (Exception e) {
-            logger.error("Erro inesperado", e);
+            logger.error("Erro ao validar arquivo JSON", e);
+            return false;
         }
     }
 

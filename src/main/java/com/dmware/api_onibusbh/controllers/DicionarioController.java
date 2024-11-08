@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.dmware.api_onibusbh.dto.DicionarioDTO;
-import com.dmware.api_onibusbh.services.ApiResponse;
 import com.dmware.api_onibusbh.services.DicionarioService;
+import com.dmware.api_onibusbh.utils.ApiResponse;
 
 @Controller
 @RequestMapping(path = "/api/v1/dicionario")
