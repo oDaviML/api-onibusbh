@@ -10,18 +10,29 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.dmware.api_onibusbh.dto.OnibusDTO;
-import com.dmware.api_onibusbh.infra.ApiResponse;
+import com.dmware.api_onibusbh.infra.CustomApiResponse;
 import com.dmware.api_onibusbh.services.OnibusService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @Controller
-@RequestMapping(path = "/api/v1/onibus")
+@RequestMapping(path = "/api/v1/onibus", produces = "application/json")
+@Tag(name = "Onibus", description = "API para buscar as coordenadas dos veículos")
 public class OnibusController {
 
       @Autowired
       private OnibusService onibusService;
 
+      @Operation(summary = "Listar todos as coordenadas, por linha")
+      @ApiResponses(value = {
+                  @ApiResponse(responseCode = "200", description = "Coordenadas listadas"),
+                  @ApiResponse(responseCode = "404", description = "Nenhuma coordenada encontrada")
+      })
       @GetMapping("/")
-      public ResponseEntity<ApiResponse<List<OnibusDTO>>> listarOnibus() {
-            return ApiResponse.of("Lista de Onibus", HttpStatus.OK, onibusService.fetchOnibus());
+      public ResponseEntity<CustomApiResponse<List<OnibusDTO>>> listarOnibus() {
+            return CustomApiResponse.of("Lista de Onibus", HttpStatus.OK, onibusService.fetchOnibus());
       }
 }

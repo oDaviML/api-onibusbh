@@ -10,18 +10,29 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.dmware.api_onibusbh.dto.LinhaDTO;
-import com.dmware.api_onibusbh.infra.ApiResponse;
+import com.dmware.api_onibusbh.infra.CustomApiResponse;
 import com.dmware.api_onibusbh.services.LinhasService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @Controller
-@RequestMapping(path = "/api/v1/linhas")
+@RequestMapping(path = "/api/v1/linhas", produces = "application/json")
+@Tag(name = "Linhas", description = "API para listagem de linhas")
 public class LinhasController {
 
       @Autowired
       private LinhasService linhasService;
 
+      @Operation(summary = "Listar todas as linhas")
+      @ApiResponses(value = {
+                  @ApiResponse(responseCode = "200", description = "Linhas listadas"),
+                  @ApiResponse(responseCode = "404", description = "Nenhuma linha encontrada")
+      })
       @GetMapping("/")
-      public ResponseEntity<ApiResponse<List<LinhaDTO>>> listarLinhas() {
-            return ApiResponse.of("Lista de linhas", HttpStatus.OK, linhasService.fetchLinhas());
+      public ResponseEntity<CustomApiResponse<List<LinhaDTO>>> listarLinhas() {
+            return CustomApiResponse.of("Lista de linhas", HttpStatus.OK, linhasService.fetchLinhas());
       }
 }
