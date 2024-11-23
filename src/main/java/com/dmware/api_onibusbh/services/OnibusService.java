@@ -49,7 +49,6 @@ public class OnibusService {
 
                   if (!onibus.getCoordenadas().isEmpty()) {
                         listaOnibus.add(onibus);
-
                   }
             });
 

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import com.dmware.api_onibusbh.dto.LinhaDTO;
 import com.dmware.api_onibusbh.entities.LinhaEntity;
+import com.dmware.api_onibusbh.exceptions.LinhasNotFoundException;
 import com.dmware.api_onibusbh.repositories.LinhasRepository;
 
 @Service
@@ -30,6 +31,10 @@ public class LinhasService {
 
       public List<LinhaDTO> fetchLinhas() {
             List<LinhaEntity> linhaEntities = linhasRepository.findAll();
+
+            if (linhaEntities.isEmpty()) {
+                  throw new LinhasNotFoundException();
+            }
             List<LinhaDTO> linhaDTOS = modelMapper.map(linhaEntities, new TypeToken<List<LinhaDTO>>() {
             }.getType());
             return linhaDTOS;

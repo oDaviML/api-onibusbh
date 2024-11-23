@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.dmware.api_onibusbh.dto.LinhaDTO;
+import com.dmware.api_onibusbh.infra.ApiResponse;
 import com.dmware.api_onibusbh.services.LinhasService;
-import com.dmware.api_onibusbh.utils.ApiResponse;
 
 @Controller
 @RequestMapping(path = "/api/v1/linhas")

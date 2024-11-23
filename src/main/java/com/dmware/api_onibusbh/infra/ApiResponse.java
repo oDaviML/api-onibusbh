@@ -1,4 +1,4 @@
-package com.dmware.api_onibusbh.utils;
+package com.dmware.api_onibusbh.infra;
 
 import java.time.LocalDateTime;
 

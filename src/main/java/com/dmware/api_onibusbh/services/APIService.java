@@ -20,6 +20,7 @@ import com.dmware.api_onibusbh.config.WebClientConfig;
 import com.dmware.api_onibusbh.dto.CoordenadaDTO;
 import com.dmware.api_onibusbh.dto.DicionarioDTO;
 import com.dmware.api_onibusbh.dto.LinhaDTO;
+import com.dmware.api_onibusbh.exceptions.ValidJsonException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -97,51 +98,47 @@ public class APIService {
         Path targetFile = directory.resolve(FILE_NAME);
 
         try {
-            // Cria diretório se não existir
             Files.createDirectories(directory);
 
-            // Busca dados da API e salva em arquivo temporário
-            Flux<DataBuffer> dataBufferFlux = webClientConfig.webClient().get()
-                    .uri("https://temporeal.pbh.gov.br/?param=D")
-                    .retrieve()
-                    .bodyToFlux(DataBuffer.class)
-                    .doOnNext(DataBufferUtils::release);
-
-            // Salva em arquivo temporário
+            // Baixa os dados e salva no arquivo temporário
             try (FileChannel fileChannel = FileChannel.open(tempFile,
                     StandardOpenOption.CREATE,
                     StandardOpenOption.WRITE,
                     StandardOpenOption.TRUNCATE_EXISTING)) {
 
+                Flux<DataBuffer> dataBufferFlux = webClientConfig.webClient().get()
+                        .uri("https://temporeal.pbh.gov.br/?param=D")
+                        .retrieve()
+                        .bodyToFlux(DataBuffer.class)
+                        .doOnNext(DataBufferUtils::release);
+
                 DataBufferUtils.write(dataBufferFlux, fileChannel)
                         .doOnError(error -> {
                             logger.error("Erro durante a escrita do arquivo temporário", error);
-                            try {
-                                Files.deleteIfExists(tempFile);
-                            } catch (IOException e) {
-                                logger.error("Erro ao tentar deletar arquivo temporário", e);
-                            }
+                            deleteFileQuietly(tempFile);
                         })
                         .blockLast();
             }
 
-            // Valida se o arquivo temporário contém JSON válido e não está vazio
+            // Valida e move o arquivo
             if (!isValidJsonFile(tempFile)) {
-                throw new IllegalStateException("Arquivo temporário contém JSON inválido ou vazio");
+                logger.error("Arquivo de coordenadas inválido, cancelando sincronização");
+                deleteFileQuietly(tempFile);
+            } else {
+                Files.move(tempFile, targetFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                logger.info("Sincronização de coordenadas concluída com sucesso");
             }
-
-            // Move o arquivo temporário para o arquivo final de forma atômica
-            Files.move(tempFile, targetFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            logger.info("Sincronização de coordenadas concluída com sucesso");
-
-        } catch (IOException | IllegalStateException e) {
+        } catch (ValidJsonException | IOException e) {
             logger.error("Erro durante a sincronização de coordenadas", e);
-            try {
-                Files.deleteIfExists(tempFile);
-            } catch (IOException ioE) {
-                logger.error("Erro ao tentar deletar arquivo temporário após falha", ioE);
-            }
-            throw new RuntimeException("Erro ao sincronizar coordenadas", e);
+            deleteFileQuietly(tempFile);
+        }
+    }
+
+    private void deleteFileQuietly(Path file) {
+        try {
+            Files.deleteIfExists(file);
+        } catch (IOException ioE) {
+            logger.error("Erro ao tentar deletar arquivo");
         }
     }
 
@@ -161,7 +158,7 @@ public class APIService {
             return !coordenadas.isEmpty();
 
         } catch (IOException e) {
-            logger.error("Erro ao validar arquivo JSON", e);
+            logger.error("Erro ao validar arquivo JSON");
             return false;
         }
     }
