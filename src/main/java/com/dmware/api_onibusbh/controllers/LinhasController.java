@@ -11,9 +11,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.dmware.api_onibusbh.dto.LinhaDTO;
 import com.dmware.api_onibusbh.infra.CustomApiResponse;
+import com.dmware.api_onibusbh.infra.ErrorResponse;
 import com.dmware.api_onibusbh.services.LinhasService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,7 +32,7 @@ public class LinhasController {
       @Operation(summary = "Listar todas as linhas")
       @ApiResponses(value = {
                   @ApiResponse(responseCode = "200", description = "Linhas listadas"),
-                  @ApiResponse(responseCode = "404", description = "Nenhuma linha encontrada")
+                  @ApiResponse(responseCode = "404", description = "Nenhuma linha encontrada", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
       })
       @GetMapping("/")
       public ResponseEntity<CustomApiResponse<List<LinhaDTO>>> listarLinhas() {
