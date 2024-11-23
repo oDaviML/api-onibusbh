@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import com.dmware.api_onibusbh.dto.LinhaDTO;
 import com.dmware.api_onibusbh.entities.LinhaEntity;
 import com.dmware.api_onibusbh.repositories.LinhasRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class LinhasService {
@@ -28,7 +27,6 @@ public class LinhasService {
       private APIService apiService;
 
       private static final Logger logger = LoggerFactory.getLogger(LinhasService.class);
-      ObjectMapper objectMapper = new ObjectMapper();
 
       public List<LinhaDTO> fetchLinhas() {
             List<LinhaEntity> linhaEntities = linhasRepository.findAll();
