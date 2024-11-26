@@ -29,8 +29,6 @@ public class DicionarioService {
 
       private static final Logger logger = LoggerFactory.getLogger(LinhasService.class);
 
-      // TODO: Alterar mapeando pois está exibindo as variáveis com os nomes do json retornado
-
       public List<DicionarioDTO> fetchDicionarios() {
             List<DicionarioEntity> dicionarioEntityList = dicionarioRepository.findAll();
             List<DicionarioDTO> dicionarioDTOList = modelMapper.map(dicionarioEntityList,
