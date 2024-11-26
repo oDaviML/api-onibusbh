@@ -1,6 +1,7 @@
 package com.dmware.api_onibusbh.dto;
 
 import com.dmware.api_onibusbh.utils.TrimStringDeserializer;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -18,17 +19,21 @@ public class LinhaDTO {
       @JsonIgnore
       private String id;
 
-      @JsonProperty("_id")
+      @JsonProperty("id")
+      @JsonAlias("_id")
       private Integer idLinha;
 
-      @JsonProperty("NumeroLinha")
+      @JsonProperty("numeroLinha")
+      @JsonAlias("NumeroLinha")
       private Integer numeroLinha;
 
-      @JsonProperty("Linha")
+      @JsonProperty("linha")
+      @JsonAlias("Linha")
       @JsonDeserialize(using = TrimStringDeserializer.class)
       private String linha;
 
-      @JsonProperty("Nome")
+      @JsonProperty("nome")
+      @JsonAlias("Nome")
       @JsonDeserialize(using = TrimStringDeserializer.class)
       private String nome;
 }

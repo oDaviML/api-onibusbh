@@ -2,6 +2,7 @@ package com.dmware.api_onibusbh.infra;
 
 import java.io.IOException;
 
+import com.dmware.api_onibusbh.exceptions.DicionarioNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -23,6 +24,12 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(CoordenadasNotFoundException.class)
     public ResponseEntity<ErrorResponse> coordenadasNotFoundException(CoordenadasNotFoundException ex) {
         return ErrorResponse.of("Não foi encontrada nenhuma coordenada, por favor tente novamente",
+                HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(DicionarioNotFoundException.class)
+    public ResponseEntity<ErrorResponse> dicionarioNotFoundException(DicionarioNotFoundException ex) {
+        return ErrorResponse.of("Não foi encontrado o dicionário para os dados, por favor tente novamente",
                 HttpStatus.NOT_FOUND);
     }
 

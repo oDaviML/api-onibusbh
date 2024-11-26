@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.dmware.api_onibusbh.exceptions.DicionarioNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.slf4j.Logger;
@@ -28,11 +29,16 @@ public class DicionarioService {
 
       private static final Logger logger = LoggerFactory.getLogger(LinhasService.class);
 
+      // TODO: Alterar mapeando pois está exibindo as variáveis com os nomes do json retornado
+
       public List<DicionarioDTO> fetchDicionarios() {
             List<DicionarioEntity> dicionarioEntityList = dicionarioRepository.findAll();
             List<DicionarioDTO> dicionarioDTOList = modelMapper.map(dicionarioEntityList,
                         new TypeToken<List<DicionarioDTO>>() {
                         }.getType());
+            if (dicionarioDTOList.isEmpty()) {
+                  throw new DicionarioNotFoundException();
+            }
             return dicionarioDTOList;
       }
 
