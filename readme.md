@@ -42,7 +42,7 @@ docker-compose up
 ```properties
 spring.profiles.active=dev
 ```
-2. Copie o conteúdo do arquivo `docker-compose.dev.yaml` para o `docker-compose.yaml` e, em seguida, execute o projeto:
+2. Copie o conteúdo do arquivo `docker-compose.dev.yaml` para o `docker-compose.yaml` e, em seguida, execute o projeto
 
 ---
 
@@ -50,7 +50,7 @@ spring.profiles.active=dev
 
 Acesse a documentação interativa dos endpoints utilizando o Swagger em:
 
-[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 
 ---
 
@@ -58,4 +58,5 @@ Acesse a documentação interativa dos endpoints utilizando o Swagger em:
 
 - **Suporte ao formato GTFS fornecido pela BHTrans**
 - **Consulta de horários previstos**
+- **Consulta de pontos de ônibus**
 - **Inclusão de ônibus metropolitanos**
