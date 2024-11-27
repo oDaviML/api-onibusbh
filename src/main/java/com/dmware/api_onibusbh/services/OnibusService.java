@@ -40,7 +40,7 @@ public class OnibusService {
             // Mapeia as linhas com suas respectivas coordenadas
             linhas.forEach(linha -> {
                   OnibusDTO onibus = new OnibusDTO();
-                  onibus.setIdLinha(linha.getNumeroLinha());
+                  onibus.setNumeroLinha(linha.getNumeroLinha());
                   onibus.setNomeLinha(linha.getNome());
                   onibus.setLinha(linha.getLinha());
                   onibus.setCoordenadas(coordenadasFiltradas.stream()

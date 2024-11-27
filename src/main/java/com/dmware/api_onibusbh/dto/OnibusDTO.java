@@ -12,7 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OnibusDTO {
-      private Integer idLinha;
+      private Integer numeroLinha;
       private String nomeLinha;
       private String linha;
       private List<CoordenadaDTO> coordenadas;

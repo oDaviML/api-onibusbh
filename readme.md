@@ -32,19 +32,8 @@ cd api-onibusbh
 1. Inicie a aplicação com o comando:
 
 ```bash
-docker-compose up
+docker compose -f docker-compose.prod.yaml up -d
 ```
-
-### Ambiente de Desenvolvimento
-
-1. Altere o perfil ativo no arquivo `application.properties` para `dev`:
-
-```properties
-spring.profiles.active=dev
-```
-2. Copie o conteúdo do arquivo `docker-compose.dev.yaml` para o `docker-compose.yaml` e, em seguida, execute o projeto:
-
----
 
 ## 📖 Documentação (Swagger)
 
