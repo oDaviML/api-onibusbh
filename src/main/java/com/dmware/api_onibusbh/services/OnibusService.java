@@ -85,11 +85,6 @@ public class OnibusService {
       }
 
       public OnibusDTO listarPorNumeroLinha(Integer numeroLinha) {
-
-            if (numeroLinha == null) {
-                  throw new IllegalArgumentException("O número da linha deve ser informado");
-            }
-
             Optional<LinhaEntity> linha = linhasRepository.findByNumeroLinha(numeroLinha);
 
             if (!linha.isPresent()) {

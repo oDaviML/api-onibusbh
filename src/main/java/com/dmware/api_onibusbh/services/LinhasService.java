@@ -3,6 +3,7 @@ package com.dmware.api_onibusbh.services;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.dmware.api_onibusbh.dto.LinhaDTO;
 import com.dmware.api_onibusbh.entities.LinhaEntity;
+import com.dmware.api_onibusbh.exceptions.LinhaNotFoundException;
 import com.dmware.api_onibusbh.exceptions.LinhasNotFoundException;
 import com.dmware.api_onibusbh.repositories.LinhasRepository;
 
@@ -38,6 +40,16 @@ public class LinhasService {
             List<LinhaDTO> linhaDTOS = modelMapper.map(linhaEntities, new TypeToken<List<LinhaDTO>>() {
             }.getType());
             return linhaDTOS;
+      }
+
+      public LinhaDTO listarLinhaPorNumero(Integer numeroLinha) {
+            Optional<LinhaEntity> linhaEntity = linhasRepository.findByNumeroLinha(numeroLinha);
+
+            if (!linhaEntity.isPresent()) {
+                  throw new LinhaNotFoundException();
+            }
+            LinhaDTO linhaDTO = modelMapper.map(linhaEntity.get(), LinhaDTO.class);
+            return linhaDTO;
       }
 
       public void salvaLinhasBanco() {

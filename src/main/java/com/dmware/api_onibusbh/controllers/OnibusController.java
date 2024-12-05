@@ -40,7 +40,7 @@ public class OnibusController {
             return CustomApiResponse.of("Lista de Onibus", HttpStatus.OK, onibusService.listarTodosOnibus());
       }
 
-      @Operation(summary = "Listar as coordenadas, por linha")
+      @Operation(summary = "Listar as coordenadas de uma linha")
       @ApiResponses(value = {
                   @ApiResponse(responseCode = "200", description = "Coordenadas listadas"),
                   @ApiResponse(responseCode = "404", description = "Nenhuma coordenada encontrada", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))

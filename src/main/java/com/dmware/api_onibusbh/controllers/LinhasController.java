@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.dmware.api_onibusbh.dto.LinhaDTO;
@@ -37,5 +38,16 @@ public class LinhasController {
       @GetMapping("/")
       public ResponseEntity<CustomApiResponse<List<LinhaDTO>>> listarLinhas() {
             return CustomApiResponse.of("Lista de linhas", HttpStatus.OK, linhasService.fetchLinhas());
+      }
+
+      @Operation(summary = "Listar uma linha pelo número")
+      @ApiResponses(value = {
+                  @ApiResponse(responseCode = "200", description = "Linha listada"),
+                  @ApiResponse(responseCode = "404", description = "Nenhuma linha encontrada", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+      })
+      @GetMapping("/{numeroLinha}")
+      public ResponseEntity<CustomApiResponse<LinhaDTO>> listarLinhaPorNumero(
+                  @PathVariable("numeroLinha") Integer numeroLinha) {
+            return CustomApiResponse.of("Linha", HttpStatus.OK, linhasService.listarLinhaPorNumero(numeroLinha));
       }
 }
