@@ -24,7 +24,7 @@ public class CoordenadaDTO {
       private String id;
 
       @JsonProperty("NL")
-      private Integer idOnibus;
+      private Integer numeroLInha;
 
       @JsonProperty("NV")
       private String numeroVeiculo;
@@ -47,7 +47,7 @@ public class CoordenadaDTO {
 
       @Override
       public String toString() {
-            return "CoordenadaDTO [id=" + id + ", idOnibus=" + idOnibus + ", numeroVeiculo=" + numeroVeiculo
+            return "CoordenadaDTO [id=" + id + ", numeroLInha=" + numeroLInha + ", numeroVeiculo=" + numeroVeiculo
                         + ", latitude=" + latitude + ", longitude=" + longitude + ", velocidade=" + velocidade
                         + ", sentido=" + sentido + ", horario=" + horario + "]";
       }

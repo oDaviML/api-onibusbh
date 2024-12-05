@@ -2,14 +2,16 @@ package com.dmware.api_onibusbh.infra;
 
 import java.io.IOException;
 
-import com.dmware.api_onibusbh.exceptions.DicionarioNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.reactive.result.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.dmware.api_onibusbh.exceptions.CoordenadasNotFoundException;
+import com.dmware.api_onibusbh.exceptions.DicionarioNotFoundException;
+import com.dmware.api_onibusbh.exceptions.LinhaNotFoundException;
 import com.dmware.api_onibusbh.exceptions.LinhasNotFoundException;
 import com.dmware.api_onibusbh.exceptions.ValidJsonException;
 
@@ -33,6 +35,11 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
                 HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(LinhaNotFoundException.class)
+    public ResponseEntity<ErrorResponse> linhaNotFoundException(LinhaNotFoundException ex) {
+        return ErrorResponse.of("Não foi encontrada nenhuma linha, por favor tente novamente", HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(ValidJsonException.class)
     public ResponseEntity<ErrorResponse> validJsonException(ValidJsonException ex) {
         return ErrorResponse.of(ex.getMessage(), HttpStatus.BAD_REQUEST);
@@ -45,6 +52,16 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(IOException.class)
     public ResponseEntity<ErrorResponse> ioException(IOException ex) {
+        return ErrorResponse.of("Ocorreu um erro interno, por favor tente novamente", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> noResourceFoundException(NoResourceFoundException ex) {
+        return ErrorResponse.of("Verifique a rota digitada ou os dados enviados", HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> exception(Exception ex) {
         return ErrorResponse.of("Ocorreu um erro interno, por favor tente novamente", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

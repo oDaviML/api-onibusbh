@@ -2,14 +2,6 @@ package com.dmware.api_onibusbh.controllers;
 
 import java.util.List;
 
-import com.dmware.api_onibusbh.infra.CustomApiResponse;
-import com.dmware.api_onibusbh.infra.ErrorResponse;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +10,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.dmware.api_onibusbh.dto.DicionarioDTO;
+import com.dmware.api_onibusbh.infra.CustomApiResponse;
 import com.dmware.api_onibusbh.services.DicionarioService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Controller
 @RequestMapping(path = "/api/v1/dicionario")

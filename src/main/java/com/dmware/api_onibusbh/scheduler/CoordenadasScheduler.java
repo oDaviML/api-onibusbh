@@ -8,18 +8,18 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.dmware.api_onibusbh.services.APIService;
+import com.dmware.api_onibusbh.services.OnibusService;
 
 @Component
 public class CoordenadasScheduler {
 
       @Autowired
-      private APIService apiService;
+      private OnibusService onibusService;
 
       @Async
       @Scheduled(fixedDelay = 20, timeUnit = TimeUnit.SECONDS)
       public void fetchCoordenadasOnibus() throws IOException {
-            apiService.getOnibusCoordenadaBH();
+            onibusService.getOnibusCoordenadaBH();
       }
 
 }

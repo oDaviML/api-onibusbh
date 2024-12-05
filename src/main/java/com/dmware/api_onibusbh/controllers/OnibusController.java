@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.dmware.api_onibusbh.dto.OnibusDTO;
@@ -36,6 +37,18 @@ public class OnibusController {
       })
       @GetMapping("/")
       public ResponseEntity<CustomApiResponse<List<OnibusDTO>>> listarOnibus() {
-            return CustomApiResponse.of("Lista de Onibus", HttpStatus.OK, onibusService.fetchOnibus());
+            return CustomApiResponse.of("Lista de Onibus", HttpStatus.OK, onibusService.listarTodosOnibus());
+      }
+
+      @Operation(summary = "Listar as coordenadas, por linha")
+      @ApiResponses(value = {
+                  @ApiResponse(responseCode = "200", description = "Coordenadas listadas"),
+                  @ApiResponse(responseCode = "404", description = "Nenhuma coordenada encontrada", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+      })
+      @GetMapping("/linha/{numeroLinha}")
+      public ResponseEntity<CustomApiResponse<OnibusDTO>> listarOnibusPorLinha(
+                  @PathVariable("numeroLinha") Integer numeroLinha) {
+            return CustomApiResponse.of("Coordenadas da linha", HttpStatus.OK,
+                        onibusService.listarPorNumeroLinha(numeroLinha));
       }
 }
