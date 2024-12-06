@@ -40,14 +40,18 @@ public class OnibusService {
 
       @Autowired
       private LinhasService linhasService;
+
       @Autowired
       private WebClientConfig webClientConfig;
+
       @Autowired
       private LinhasRepository linhasRepository;
+
       @Autowired
       private ModelMapper modelMapper;
 
-      ObjectMapper objectMapper = new ObjectMapper();
+      @Autowired
+      private ObjectMapper objectMapper;
 
       private static final Logger logger = LoggerFactory.getLogger(OnibusService.class);
       private static final String BASE_PATH = "src/data/coordenadas";

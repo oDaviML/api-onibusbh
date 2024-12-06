@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import com.dmware.api_onibusbh.config.WebClientConfig;
 import com.dmware.api_onibusbh.dto.DicionarioDTO;
@@ -19,7 +20,8 @@ public class APIService {
     @Autowired
     private WebClientConfig webClientConfig;
 
-    ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private ObjectMapper objectMapper;
 
     public List<DicionarioDTO> getDicionarioAPIBH() {
         List<DicionarioDTO> dicionarios;
@@ -38,7 +40,7 @@ public class APIService {
                     new TypeReference<List<DicionarioDTO>>() {
                     });
 
-        } catch (JsonProcessingException e) {
+        } catch (JsonProcessingException | WebClientResponseException e) {
             throw new RuntimeException(e);
         }
 
@@ -65,7 +67,7 @@ public class APIService {
 
             return linhasNovas;
 
-        } catch (JsonProcessingException e) {
+        } catch (JsonProcessingException | WebClientResponseException e) {
             throw new RuntimeException(e);
         }
     }
