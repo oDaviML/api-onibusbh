@@ -3,6 +3,7 @@ package com.dmware.api_onibusbh.dto;
 import java.time.LocalDateTime;
 
 import com.dmware.api_onibusbh.utils.DateDeserializer;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -43,6 +44,7 @@ public class CoordenadaDTO {
 
       @JsonProperty("HR")
       @JsonDeserialize(using = DateDeserializer.class)
+      @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss:SSS")
       private LocalDateTime horario;
 
       @Override
