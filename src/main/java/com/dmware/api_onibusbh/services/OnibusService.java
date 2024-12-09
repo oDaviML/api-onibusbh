@@ -88,16 +88,14 @@ public class OnibusService {
             return onibus;
       }
 
-      public OnibusDTO listarPorNumeroLinha(Integer numeroLinha) {
+      public List<CoordenadaDTO> listarPorNumeroLinha(Integer numeroLinha) {
             Optional<LinhaEntity> linha = linhasRepository.findByNumeroLinha(numeroLinha);
 
             if (!linha.isPresent()) {
                   throw new LinhaNotFoundException();
             }
 
-            OnibusDTO onibus = modelMapper.map(linha.get(), OnibusDTO.class);
-            onibus.setCoordenadas(linha.get().getCoordenadas());
-            return onibus;
+            return linha.get().getCoordenadas();
       }
 
       private void salvaCoordenadas() {
