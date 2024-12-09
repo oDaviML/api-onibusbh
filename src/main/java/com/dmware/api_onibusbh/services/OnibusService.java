@@ -116,7 +116,7 @@ public class OnibusService {
             // Mapeia as linhas com suas respectivas coordenadas
             linhas.forEach(linha -> {
                   coordenadasPorLinha.put(linha.getNumeroLinha(), coordenadasFiltradas.stream()
-                              .filter(coord -> Objects.equals(coord.getNumeroLInha(), linha.getNumeroLinha()))
+                              .filter(coord -> Objects.equals(coord.getNumeroLinha(), linha.getNumeroLinha()))
                               .collect(Collectors.toList()));
             });
 
