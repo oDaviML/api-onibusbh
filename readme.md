@@ -12,7 +12,6 @@ A **API Ônibus BH** é uma aplicação que fornece informações atualizadas so
 - **Java 21**
 - **Spring Boot**
 - **MongoDB**
-- **Docker/Docker Compose**
 
 ---
 
