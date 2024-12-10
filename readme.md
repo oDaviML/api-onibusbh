@@ -16,9 +16,8 @@ A **API Ônibus BH** é uma aplicação que fornece informações atualizadas so
 
 ---
 
-## 🚀 Deploy
+## 🚀 Instalação local
 
-### Clonando o Projeto
 
 Faça o clone do repositório com o comando abaixo:
 
@@ -27,9 +26,7 @@ git clone https://github.com/oDaviML/api-onibusbh.git
 cd api-onibusbh
 ```
 
-### Utilizando Docker
-
-1. Inicie a aplicação com o comando:
+Inicie a aplicação com o comando:
 
 ```bash
 docker compose -f docker-compose.prod.yaml up -d
