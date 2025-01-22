@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.reactive.result.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.dmware.api_onibusbh.exceptions.CoordenadasNotFoundException;
@@ -60,8 +61,8 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
         return ErrorResponse.of("Verifique a rota digitada ou os dados enviados", HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> exception(Exception ex) {
-        return ErrorResponse.of("Ocorreu um erro interno, por favor tente novamente", HttpStatus.INTERNAL_SERVER_ERROR);
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ErrorResponse> noHandlerFoundException(NoHandlerFoundException ex) {
+        return ErrorResponse.of("Verifique a rota digitada ou os dados enviados", HttpStatus.NOT_FOUND);
     }
 }
