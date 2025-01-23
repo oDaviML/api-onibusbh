@@ -33,9 +33,10 @@ docker compose -f docker-compose.prod.yaml up -d
 
 ## 📖 Documentação (Swagger)
 
-Acesse a documentação interativa dos endpoints utilizando o Swagger em:
+Acesse a documentação interativa dos endpoints utilizando o Swagger:
 
-[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+- **Versão Online**: [https://apionibusbh.davimartinslage.com.br/swagger-ui/index.html](https://apionibusbh.davimartinslage.com.br/swagger-ui/index.html)
+- **Versão Local** (após rodar a aplicação localmente): [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 
 ---
 
