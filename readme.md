@@ -61,5 +61,5 @@ Acesse a documentação interativa dos endpoints utilizando o Swagger:
 
 ---
 
-Desenvolvido com ❤️ por [DaviML](https://github.com/oDaviML).
+Desenvolvido com ❤️ por [Davi](https://github.com/oDaviML).
 
