@@ -118,11 +118,22 @@ public class OnibusService {
 
         // Cria uma lista de LinhaEntity com suas respectivas coordenadas e em seguida
         // salva no banco
-        List<LinhaEntity> linhasEntities = linhas.stream().map(linha -> {
-            LinhaEntity linhaEntity = modelMapper.map(linha, LinhaEntity.class);
-            linhaEntity.setCoordenadas(coordenadasPorLinha.get(linha.getNumeroLinha()));
-            return linhaEntity;
-        }).collect(Collectors.toList());
+        List<LinhaEntity> linhasEntities = linhas.stream()
+                .filter(linha -> !coordenadasPorLinha.get(linha.getNumeroLinha()).isEmpty())
+                .map(linha -> {
+                    LinhaEntity linhaEntity = modelMapper.map(linha, LinhaEntity.class);
+                    List<CoordenadaDTO> coordenadasLinha = coordenadasPorLinha.get(linha.getNumeroLinha());
+                    linhaEntity.setCoordenadas(coordenadasLinha);
+
+                    List<Character> sentidos = coordenadasLinha.stream()
+                            .map(CoordenadaDTO::getSentido)
+                            .filter(sentido -> sentido != null && sentido != '0')
+                            .collect(Collectors.toList());
+                    linhaEntity.setSentidoIsUnique(sentidos.size() > 0 &&
+                            sentidos.stream().distinct().count() == 1);
+
+                    return linhaEntity;
+                }).collect(Collectors.toList());
 
         linhasRepository.saveAll(linhasEntities);
 
