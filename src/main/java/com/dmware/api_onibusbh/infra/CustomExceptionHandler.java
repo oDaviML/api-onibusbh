@@ -1,7 +1,6 @@
 package com.dmware.api_onibusbh.infra;
 
-import java.io.IOException;
-
+import com.dmware.api_onibusbh.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -10,11 +9,7 @@ import org.springframework.web.reactive.result.method.annotation.ResponseEntityE
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import com.dmware.api_onibusbh.exceptions.CoordenadasNotFoundException;
-import com.dmware.api_onibusbh.exceptions.DicionarioNotFoundException;
-import com.dmware.api_onibusbh.exceptions.LinhaNotFoundException;
-import com.dmware.api_onibusbh.exceptions.LinhasNotFoundException;
-import com.dmware.api_onibusbh.exceptions.ValidJsonException;
+import java.io.IOException;
 
 @ControllerAdvice
 public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
@@ -48,6 +43,7 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> runtimeException(RuntimeException ex) {
+        logger.error(ex.getMessage(), ex);
         return ErrorResponse.of("Ocorreu um erro interno, por favor tente novamente", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 

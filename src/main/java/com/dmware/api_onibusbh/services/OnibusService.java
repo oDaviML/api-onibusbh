@@ -67,10 +67,16 @@ public class OnibusService {
         List<LinhaEntity> linhas = linhasRepository.findAll();
 
         List<OnibusDTO> onibus = linhas.stream()
-                .filter(linha -> !linha.getCoordenadas().isEmpty())
+                .filter(linha -> linha.getCoordenadas() != null && !linha.getCoordenadas().isEmpty())
                 .map(linha -> {
                     OnibusDTO onibusDTO = modelMapper.map(linha, OnibusDTO.class);
-                    onibusDTO.setCoordenadas(linha.getCoordenadas());
+                    List<CoordenadaDTO> coordenadas = linha.getCoordenadas().stream()
+                            .filter(coordenadaDTO -> {
+                                Character sentido = coordenadaDTO.getSentido();
+                                return sentido != null && (sentido == '1' || sentido == '2');
+                            })
+                            .toList();
+                    onibusDTO.setCoordenadas(coordenadas);
                     return onibusDTO;
                 }).collect(Collectors.toList());
 
@@ -80,17 +86,23 @@ public class OnibusService {
     public List<CoordenadaDTO> listarPorNumeroLinha(Integer numeroLinha, Optional<Integer> sentido) {
         Optional<LinhaEntity> linha = linhasRepository.findByNumeroLinha(numeroLinha);
 
-        if (!linha.isPresent()) {
+        if (linha.isEmpty()) {
             throw new LinhaNotFoundException();
         }
 
         List<CoordenadaDTO> coordenadas = linha.get().getCoordenadas();
+
+        if (coordenadas == null || coordenadas.isEmpty()) {
+            throw new CoordenadasNotFoundException();
+        }
+
         if (sentido.isPresent()) {
             coordenadas = coordenadas.stream()
                     .filter(coordenada -> coordenada.getSentido() != null &&
                             coordenada.getSentido().equals(Character.forDigit(sentido.get(), 10)))
                     .collect(Collectors.toList());
         }
+
         return coordenadas;
     }
 
