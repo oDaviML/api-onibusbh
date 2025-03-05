@@ -46,9 +46,21 @@ public class LinhasService {
         if (linhaEntities.isEmpty()) {
             throw new LinhasNotFoundException();
         }
-        List<LinhaDTO> linhaDTOS = modelMapper.map(linhaEntities, new TypeToken<List<LinhaDTO>>() {
+
+        // Filtra apenas as linhas que possuem coordenadas válidas
+        List<LinhaEntity> linhasFiltradas = linhaEntities.stream()
+                .filter(linha -> linha.getCoordenadas() != null &&
+                        linha.getCoordenadas().stream()
+                                .anyMatch(coord -> coord.getSentido() != null &&
+                                        (coord.getSentido() == '1' || coord.getSentido() == '2')))
+                .toList();
+
+        if (linhasFiltradas.isEmpty()) {
+            throw new LinhasNotFoundException();
+        }
+
+        return modelMapper.map(linhasFiltradas, new TypeToken<List<LinhaDTO>>() {
         }.getType());
-        return linhaDTOS;
     }
 
 
