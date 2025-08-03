@@ -7,6 +7,7 @@ import com.dmware.api_onibusbh.dto.OnibusDTO;
 import com.dmware.api_onibusbh.entities.LinhaEntity;
 import com.dmware.api_onibusbh.exceptions.CoordenadasNotFoundException;
 import com.dmware.api_onibusbh.exceptions.LinhaNotFoundException;
+import com.dmware.api_onibusbh.exceptions.LinhasNotFoundException;
 import com.dmware.api_onibusbh.repositories.LinhasRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -107,7 +108,14 @@ public class OnibusService {
     }
 
     private void salvaCoordenadas() {
-        List<LinhaDTO> linhas = linhasService.fetchLinhas();
+        List<LinhaDTO> linhas;
+        try {
+            linhas = linhasService.fetchLinhas();
+        } catch (LinhasNotFoundException e) {
+            logger.warn("Nenhuma linha encontrada no banco de dados. Coordenadas não serão salvas neste ciclo.");
+            return;
+        }
+
         List<CoordenadaDTO> coordenadas = fetchCoordenadas();
 
         // Filtra as coordenadas pelo número do veículo, deixando apenas as que forem
@@ -117,7 +125,7 @@ public class OnibusService {
                         CoordenadaDTO::getNumeroVeiculo,
                         Function.identity(),
                         BinaryOperator.maxBy(Comparator.comparing(CoordenadaDTO::getHorario))))
-                .values().stream().collect(Collectors.toList());
+                .values().stream().toList();
 
         HashMap<Integer, List<CoordenadaDTO>> coordenadasPorLinha = new HashMap<>();
 
@@ -140,8 +148,8 @@ public class OnibusService {
                     List<Character> sentidos = coordenadasLinha.stream()
                             .map(CoordenadaDTO::getSentido)
                             .filter(sentido -> sentido != null && sentido != '0')
-                            .collect(Collectors.toList());
-                    linhaEntity.setSentidoIsUnique(sentidos.size() > 0 &&
+                            .toList();
+                    linhaEntity.setSentidoIsUnique(!sentidos.isEmpty() &&
                             sentidos.stream().distinct().count() == 1);
 
                     return linhaEntity;
