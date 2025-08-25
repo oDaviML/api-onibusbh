@@ -14,13 +14,19 @@ import com.dmware.api_onibusbh.services.OnibusService;
 @Component
 public class CoordenadasScheduler {
 
-      @Autowired
-      private OnibusService onibusService;
+    private final APIService apiService;
+    private final OnibusService onibusService;
 
-      @Async
-      @Scheduled(fixedDelay = 20, timeUnit = TimeUnit.SECONDS)
-      public void fetchCoordenadasOnibus() throws IOException {
-            onibusService.getOnibusCoordenadaBH();
-      }
+    public CoordenadasScheduler(APIService apiService, OnibusService onibusService) {
+        this.apiService = apiService;
+        this.onibusService = onibusService;
+    }
+
+    @Async
+    @Scheduled(fixedDelay = 20, timeUnit = TimeUnit.SECONDS)
+    public void fetchCoordenadasOnibus() throws IOException {
+        apiService.getOnibusCoordenadaBH();
+        onibusService.salvaCoordenadas();
+    }
 
 }
