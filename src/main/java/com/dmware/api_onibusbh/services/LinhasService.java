@@ -38,9 +38,8 @@ public class LinhasService {
         if (linhaEntities.isEmpty()) {
             throw new LinhasNotFoundException();
         }
-        List<LinhaDTO> linhaDTOS = modelMapper.map(linhaEntities, new TypeToken<List<LinhaDTO>>() {
+        return modelMapper.map(linhaEntities, new TypeToken<List<LinhaDTO>>() {
         }.getType());
-        return linhaDTOS;
     }
 
     public List<LinhaDTO> fetchLinhasCoordenadasNotEmpty() {
@@ -70,48 +69,38 @@ public class LinhasService {
     public LinhaDTO listarLinhaPorNumero(Integer numeroLinha) {
         Optional<LinhaEntity> linhaEntity = linhasRepository.findByNumeroLinha(numeroLinha);
 
-        if (!linhaEntity.isPresent()) {
+        if (linhaEntity.isEmpty()) {
             throw new LinhaNotFoundException();
         }
-        LinhaDTO linhaDTO = modelMapper.map(linhaEntity.get(), LinhaDTO.class);
-        return linhaDTO;
+        return modelMapper.map(linhaEntity.get(), LinhaDTO.class);
     }
 
-    public void salvaLinhasBanco() {
-        logger.info("Iniciando sincronização de linhas");
-        List<LinhaDTO> listaLinhasNovas = apiService.getLinhasAPIBH();
-
-        // Busca as linhas já existentes no banco
+    public void salvaLinhasNormais() {
+        logger.info("Iniciando sincronização de linhas normais.");
+        List<LinhaDTO> linhasDaAPI = apiService.getLinhasAPIBH();
         List<LinhaEntity> linhasExistentes = linhasRepository.findAll();
-        logger.info("Linhas existentes no banco: " + linhasExistentes.size());
+        logger.info("Linhas existentes no banco: {}", linhasExistentes.size());
 
-        // Cria uma lista para armazenar os dados que precisam ser atualizados
-        List<LinhaDTO> linhasParaSalvar = new ArrayList<>();
-
-        // Mapeia as linhas existentes para um Map por idLinha, para fácil comparação
         Map<Integer, LinhaEntity> linhasExistentesMap = linhasExistentes.stream()
                 .collect(Collectors.toMap(LinhaEntity::getIdLinha, linha -> linha));
 
-        // Verifica as linhas novas
-        for (LinhaDTO novaLinha : listaLinhasNovas) {
-            LinhaEntity linhaExistente = linhasExistentesMap.get(novaLinha.getIdLinha());
+        List<LinhaEntity> linhasParaSalvar = linhasDaAPI.stream()
+                .map(l -> {
+                    l.setTipo(Tipo.NORMAL);
+                    return modelMapper.map(l, LinhaEntity.class);
+                })
+                .filter(linhaNova -> {
+                    LinhaEntity linhaExistente = linhasExistentesMap.get(linhaNova.getIdLinha());
 
-            if (linhaExistente == null) {
-                // Se a linha não existir no banco, é um novo registro
-                logger.info("Nova linha encontrada: " + novaLinha.getLinha());
-                linhasParaSalvar.add(novaLinha);
-            } else if (!novaLinha.getLinha().equals(linhaExistente.getLinha())) {
-                // Se os dados forem diferentes, a linha foi atualizada
-                logger.info("Linha atualizada: " + novaLinha.getLinha());
-                linhasParaSalvar.add(novaLinha);
-            }
-        }
+                    return linhaExistente == null || !linhaNova.getLinha().equals(linhaExistente.getLinha());
+                })
+                .toList();
 
-        // Salva apenas as linhas que foram novas ou atualizadas
         if (!linhasParaSalvar.isEmpty()) {
-            logger.info("Linhas novas ou atualizadas: " + linhasParaSalvar.size());
-            linhasRepository.saveAll(modelMapper.map(linhasParaSalvar, new TypeToken<List<LinhaEntity>>() {
-            }.getType()));
+            linhasRepository.saveAll(linhasParaSalvar);
+            logger.info("Linhas normais sincronizadas com sucesso. Total de linhas salvas/atualizadas: {}", linhasParaSalvar.size());
+        } else {
+            logger.info("Nenhuma linha nova ou atualizada encontrada para sincronização.");
         }
     }
 
