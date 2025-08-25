@@ -2,14 +2,13 @@ package com.dmware.api_onibusbh.services;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -21,6 +20,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 @Service
 public class APIService {
@@ -87,16 +88,49 @@ public class APIService {
     }
 
     public void getOnibusCoordenadaBH() throws IOException {
-        Flux<DataBuffer> dataBufferFlux = webClientConfig.webClient().get()
+        Mono<String> monoParamD = webClientConfig.webClient().get()
                 .uri("https://temporeal.pbh.gov.br/?param=D")
                 .retrieve()
-                .bodyToFlux(DataBuffer.class);
-        if (!Files.exists(Paths.get(BASE_PATH))) {
-            Files.createDirectories(Paths.get(BASE_PATH));
+                .bodyToMono(String.class);
+
+        Mono<String> monoParamSD = webClientConfig.webClient().get()
+                .uri("https://temporeal.pbh.gov.br/?param=SD")
+                .retrieve()
+                .bodyToMono(String.class);
+
+        List<String> responses = Flux.merge(monoParamD, monoParamSD).collectList().block();
+
+        if (responses == null || responses.size() < 2) {
+            throw new IllegalStateException("Não foi possível obter resposta de um ou mais endpoints.");
         }
-        DataBufferUtils.write(dataBufferFlux, Paths.get(BASE_PATH, FILE_NAME), StandardOpenOption.CREATE,
-                StandardOpenOption.TRUNCATE_EXISTING).block();
+
+        String jsonD = responses.get(0);
+        String jsonSD = responses.get(1);
+
+        try {
+            // Desserializa cada JSON em uma lista de mapas
+            TypeReference<List<Map<String, Object>>> typeRef = new TypeReference<>() {
+            };
+            List<Map<String, Object>> listD = objectMapper.readValue(jsonD, typeRef);
+            List<Map<String, Object>> listSD = objectMapper.readValue(jsonSD, typeRef);
+
+            // Combina as duas listas
+            List<Map<String, Object>> combinedList = new ArrayList<>(listD);
+            combinedList.addAll(listSD);
+
+            // Serializa a lista combinada para uma única string JSON
+            String finalJson = objectMapper.writeValueAsString(combinedList);
+
+            Path basePath = Paths.get(BASE_PATH);
+            if (!Files.exists(basePath)) {
+                Files.createDirectories(basePath);
+            }
+
+            Path filePath = basePath.resolve(FILE_NAME);
+            Files.writeString(filePath, finalJson);
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Erro ao processar o JSON das coordenadas.", e);
+        }
     }
-
-
 }
