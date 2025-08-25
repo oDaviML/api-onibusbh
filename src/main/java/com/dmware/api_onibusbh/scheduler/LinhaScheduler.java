@@ -12,13 +12,16 @@ import com.dmware.api_onibusbh.services.LinhasService;
 @Component
 public class LinhaScheduler {
 
-    @Autowired
-    private LinhasService linhasService;
+    private final LinhasService linhasService;
+
+    public LinhaScheduler(LinhasService linhasService) {
+        this.linhasService = linhasService;
+    }
 
     @Async
     @Scheduled(fixedDelay = 12, timeUnit = TimeUnit.HOURS)
     public void fetchCoordenadasOnibus() {
-        linhasService.salvaLinhasBanco();
+        linhasService.salvaLinhasNormais();
     }
 
 }

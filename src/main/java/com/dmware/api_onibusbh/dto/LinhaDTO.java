@@ -1,5 +1,6 @@
 package com.dmware.api_onibusbh.dto;
 
+import com.dmware.api_onibusbh.enuns.Tipo;
 import com.dmware.api_onibusbh.utils.TrimStringDeserializer;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -46,4 +47,6 @@ public class LinhaDTO {
 
     @JsonAlias("SentidoIsUnique")
     private boolean sentidoIsUnique;
+
+    private Tipo tipo;
 }

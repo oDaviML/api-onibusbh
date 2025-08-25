@@ -12,10 +12,13 @@ import com.dmware.api_onibusbh.services.DicionarioService;
 @Component
 public class DicionarioScheduler {
 
-      @Autowired
-      private DicionarioService dicionarioService;
+    private final DicionarioService dicionarioService;
 
-      @Async
+    public DicionarioScheduler(DicionarioService dicionarioService) {
+        this.dicionarioService = dicionarioService;
+    }
+
+    @Async
       @Scheduled(fixedDelay = 12, timeUnit = TimeUnit.HOURS)
       public void salvaDicionarioBanco() {
             dicionarioService.salvarDicionarioBanco();

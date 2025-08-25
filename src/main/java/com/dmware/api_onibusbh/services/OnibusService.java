@@ -15,6 +15,7 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.stereotype.Service;
@@ -34,40 +35,27 @@ import java.util.stream.Collectors;
 public class OnibusService {
 
     private static final Logger logger = LoggerFactory.getLogger(OnibusService.class);
-    private static final String BASE_PATH = "src/data/coordenadas";
-    private static final String FILE_NAME = "coordenadas.json";
-    @Autowired
-    private LinhasService linhasService;
-    @Autowired
-    private WebClientConfig webClientConfig;
-    @Autowired
-    private LinhasRepository linhasRepository;
-    @Autowired
-    private ModelMapper modelMapper;
-    @Autowired
-    private ObjectMapper objectMapper;
 
-    public void getOnibusCoordenadaBH() throws IOException {
-        logger.info("Iniciando sincronização de coordenadas");
+    @Value("${BASE_PATH}")
+    private String BASE_PATH;
+    @Value("${FILE_NAME}")
+    private String FILE_NAME;
 
-        Flux<DataBuffer> dataBufferFlux = webClientConfig.webClient().get()
-                .uri("https://temporeal.pbh.gov.br/?param=D")
-                .retrieve()
-                .bodyToFlux(DataBuffer.class);
-        if (!Files.exists(Paths.get(BASE_PATH))) {
-            Files.createDirectories(Paths.get(BASE_PATH));
-        }
-        DataBufferUtils.write(dataBufferFlux, Paths.get(BASE_PATH, FILE_NAME), StandardOpenOption.CREATE,
-                StandardOpenOption.TRUNCATE_EXISTING).block();
+    private final LinhasRepository linhasRepository;
+    private final ModelMapper modelMapper;
+    private final ObjectMapper objectMapper;
 
-        salvaCoordenadas();
-        logger.info("Coordenadas sincronizadas com sucesso");
+    public OnibusService(LinhasService linhasService, WebClientConfig webClientConfig, LinhasRepository linhasRepository, ModelMapper modelMapper, ObjectMapper objectMapper) {
+        this.linhasRepository = linhasRepository;
+        this.modelMapper = modelMapper;
+        this.objectMapper = objectMapper;
     }
+
 
     public List<OnibusDTO> listarTodosOnibus() {
         List<LinhaEntity> linhas = linhasRepository.findAll();
 
-        List<OnibusDTO> onibus = linhas.stream()
+        return linhas.stream()
                 .filter(linha -> linha.getCoordenadas() != null && !linha.getCoordenadas().isEmpty())
                 .map(linha -> {
                     OnibusDTO onibusDTO = modelMapper.map(linha, OnibusDTO.class);
@@ -80,8 +68,6 @@ public class OnibusService {
                     onibusDTO.setCoordenadas(coordenadas);
                     return onibusDTO;
                 }).collect(Collectors.toList());
-
-        return onibus;
     }
 
     public List<CoordenadaDTO> listarPorNumeroLinha(Integer numeroLinha, Optional<Integer> sentido) {
@@ -107,59 +93,64 @@ public class OnibusService {
         return coordenadas;
     }
 
-    private void salvaCoordenadas() {
-        List<LinhaDTO> linhas;
+    public void salvaCoordenadas() {
+        logger.info("Iniciando o salvamento das coordenadas...");
+        List<LinhaEntity> linhasExistentes;
         try {
-            linhas = linhasService.fetchLinhas();
-        } catch (LinhasNotFoundException e) {
-            logger.warn("Nenhuma linha encontrada no banco de dados. Coordenadas não serão salvas neste ciclo.");
+            // Busca as entidades diretamente para evitar conversão DTO -> Entity
+            linhasExistentes = linhasRepository.findAll();
+            if (linhasExistentes.isEmpty()) {
+                logger.warn("Nenhuma linha encontrada no banco de dados. Coordenadas não serão salvas.");
+                return;
+            }
+        } catch (Exception e) {
+            logger.error("Erro ao buscar linhas do banco de dados.", e);
             return;
         }
 
         List<CoordenadaDTO> coordenadas = fetchCoordenadas();
+        if (coordenadas.isEmpty()) {
+            logger.info("Nenhuma coordenada encontrada para processar.");
+            return;
+        }
 
-        // Filtra as coordenadas pelo número do veículo, deixando apenas as que forem
-        // mais recentes em relação ao horário
-        List<CoordenadaDTO> coordenadasFiltradas = coordenadas.stream()
+        // Agrupa as coordenadas mais recentes por número de linha
+        Map<Integer, List<CoordenadaDTO>> coordenadasPorLinha = coordenadas.stream()
                 .collect(Collectors.toMap(
                         CoordenadaDTO::getNumeroVeiculo,
                         Function.identity(),
-                        BinaryOperator.maxBy(Comparator.comparing(CoordenadaDTO::getHorario))))
-                .values().stream().toList();
+                        BinaryOperator.maxBy(Comparator.comparing(CoordenadaDTO::getHorario))
+                ))
+                .values().stream()
+                .filter(c -> c.getNumeroLinha() != null)
+                .collect(Collectors.groupingBy(CoordenadaDTO::getNumeroLinha));
 
-        HashMap<Integer, List<CoordenadaDTO>> coordenadasPorLinha = new HashMap<>();
+        // Atualiza as linhas existentes com as novas coordenadas
+        List<LinhaEntity> linhasParaSalvar = linhasExistentes.stream()
+                .filter(linha -> coordenadasPorLinha.containsKey(linha.getNumeroLinha()))
+                .peek(linha -> {
+                    List<CoordenadaDTO> coordenadasDaLinha = coordenadasPorLinha.get(linha.getNumeroLinha());
+                    linha.setCoordenadas(coordenadasDaLinha);
 
-        // Mapeia as linhas com suas respectivas coordenadas
-        linhas.forEach(linha -> {
-            coordenadasPorLinha.put(linha.getNumeroLinha(), coordenadasFiltradas.stream()
-                    .filter(coord -> Objects.equals(coord.getNumeroLinha(), linha.getNumeroLinha()))
-                    .collect(Collectors.toList()));
-        });
-
-        // Cria uma lista de LinhaEntity com suas respectivas coordenadas e em seguida
-        // salva no banco
-        List<LinhaEntity> linhasEntities = linhas.stream()
-                .filter(linha -> !coordenadasPorLinha.get(linha.getNumeroLinha()).isEmpty())
-                .map(linha -> {
-                    LinhaEntity linhaEntity = modelMapper.map(linha, LinhaEntity.class);
-                    List<CoordenadaDTO> coordenadasLinha = coordenadasPorLinha.get(linha.getNumeroLinha());
-                    linhaEntity.setCoordenadas(coordenadasLinha);
-
-                    List<Character> sentidos = coordenadasLinha.stream()
+                    List<Character> sentidos = coordenadasDaLinha.stream()
                             .map(CoordenadaDTO::getSentido)
                             .filter(sentido -> sentido != null && sentido != '0')
+                            .distinct()
                             .toList();
-                    linhaEntity.setSentidoIsUnique(!sentidos.isEmpty() &&
-                            sentidos.stream().distinct().count() == 1);
 
-                    return linhaEntity;
-                }).collect(Collectors.toList());
+                    linha.setSentidoIsUnique(!sentidos.isEmpty() && sentidos.size() == 1);
+                })
+                .toList();
 
-        linhasRepository.saveAll(linhasEntities);
-
+        if (!linhasParaSalvar.isEmpty()) {
+            linhasRepository.saveAll(linhasParaSalvar);
+            logger.info("Coordenadas salvas com sucesso. Total de linhas atualizadas: {}", linhasParaSalvar.size());
+        } else {
+            logger.info("Nenhuma linha com novas coordenadas para atualizar.");
+        }
     }
 
-    private List<CoordenadaDTO> fetchCoordenadas() {
+    public List<CoordenadaDTO> fetchCoordenadas() {
         try {
             Path file = Paths.get(BASE_PATH, FILE_NAME);
             if (!Files.exists(file)) {
@@ -167,12 +158,10 @@ public class OnibusService {
                 throw new CoordenadasNotFoundException();
             }
 
-            List<CoordenadaDTO> coordenadas = objectMapper.readValue(
+            return objectMapper.readValue(
                     file.toFile(),
-                    new TypeReference<List<CoordenadaDTO>>() {
+                    new TypeReference<>() {
                     });
-
-            return coordenadas;
 
         } catch (CoordenadasNotFoundException | IOException e) {
             logger.error("Erro ao ler arquivo de coordenadas");
