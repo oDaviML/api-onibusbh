@@ -1,8 +1,15 @@
 package com.dmware.api_onibusbh.services;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -13,15 +20,23 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import reactor.core.publisher.Flux;
 
 @Service
 public class APIService {
 
-    @Autowired
-    private WebClientConfig webClientConfig;
+    @Value("${BASE_PATH}")
+    private String BASE_PATH;
+    @Value("${FILE_NAME}")
+    private String FILE_NAME;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final WebClientConfig webClientConfig;
+    private final ObjectMapper objectMapper;
+
+    public APIService(WebClientConfig webClientConfig, ObjectMapper objectMapper) {
+        this.webClientConfig = webClientConfig;
+        this.objectMapper = objectMapper;
+    }
 
     public List<DicionarioDTO> getDicionarioAPIBH() {
         List<DicionarioDTO> dicionarios;
@@ -61,15 +76,27 @@ public class APIService {
             JsonNode recordsNode = rootNode.path("result").path("records");
 
             // Deserializa o JsonNode em uma lista de objetos LinhaDTO
-            List<LinhaDTO> linhasNovas = objectMapper.readValue(recordsNode.toString(),
+
+            return objectMapper.readValue(recordsNode.toString(),
                     new TypeReference<List<LinhaDTO>>() {
                     });
-
-            return linhasNovas;
 
         } catch (JsonProcessingException | WebClientResponseException e) {
             throw new RuntimeException(e);
         }
     }
+
+    public void getOnibusCoordenadaBH() throws IOException {
+        Flux<DataBuffer> dataBufferFlux = webClientConfig.webClient().get()
+                .uri("https://temporeal.pbh.gov.br/?param=D")
+                .retrieve()
+                .bodyToFlux(DataBuffer.class);
+        if (!Files.exists(Paths.get(BASE_PATH))) {
+            Files.createDirectories(Paths.get(BASE_PATH));
+        }
+        DataBufferUtils.write(dataBufferFlux, Paths.get(BASE_PATH, FILE_NAME), StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING).block();
+    }
+
 
 }
