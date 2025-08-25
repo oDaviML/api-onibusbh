@@ -2,6 +2,7 @@ package com.dmware.api_onibusbh.services;
 
 import com.dmware.api_onibusbh.dto.LinhaDTO;
 import com.dmware.api_onibusbh.entities.LinhaEntity;
+import com.dmware.api_onibusbh.enuns.Tipo;
 import com.dmware.api_onibusbh.exceptions.LinhaNotFoundException;
 import com.dmware.api_onibusbh.exceptions.LinhasNotFoundException;
 import com.dmware.api_onibusbh.repositories.LinhasRepository;
