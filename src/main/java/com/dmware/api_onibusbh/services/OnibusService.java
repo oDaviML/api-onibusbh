@@ -15,6 +15,7 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.stereotype.Service;
@@ -34,40 +35,27 @@ import java.util.stream.Collectors;
 public class OnibusService {
 
     private static final Logger logger = LoggerFactory.getLogger(OnibusService.class);
-    private static final String BASE_PATH = "src/data/coordenadas";
-    private static final String FILE_NAME = "coordenadas.json";
-    @Autowired
-    private LinhasService linhasService;
-    @Autowired
-    private WebClientConfig webClientConfig;
-    @Autowired
-    private LinhasRepository linhasRepository;
-    @Autowired
-    private ModelMapper modelMapper;
-    @Autowired
-    private ObjectMapper objectMapper;
 
-    public void getOnibusCoordenadaBH() throws IOException {
-        logger.info("Iniciando sincronização de coordenadas");
+    @Value("${BASE_PATH}")
+    private String BASE_PATH;
+    @Value("${FILE_NAME}")
+    private String FILE_NAME;
 
-        Flux<DataBuffer> dataBufferFlux = webClientConfig.webClient().get()
-                .uri("https://temporeal.pbh.gov.br/?param=D")
-                .retrieve()
-                .bodyToFlux(DataBuffer.class);
-        if (!Files.exists(Paths.get(BASE_PATH))) {
-            Files.createDirectories(Paths.get(BASE_PATH));
-        }
-        DataBufferUtils.write(dataBufferFlux, Paths.get(BASE_PATH, FILE_NAME), StandardOpenOption.CREATE,
-                StandardOpenOption.TRUNCATE_EXISTING).block();
+    private final LinhasRepository linhasRepository;
+    private final ModelMapper modelMapper;
+    private final ObjectMapper objectMapper;
 
-        salvaCoordenadas();
-        logger.info("Coordenadas sincronizadas com sucesso");
+    public OnibusService(LinhasService linhasService, WebClientConfig webClientConfig, LinhasRepository linhasRepository, ModelMapper modelMapper, ObjectMapper objectMapper) {
+        this.linhasRepository = linhasRepository;
+        this.modelMapper = modelMapper;
+        this.objectMapper = objectMapper;
     }
+
 
     public List<OnibusDTO> listarTodosOnibus() {
         List<LinhaEntity> linhas = linhasRepository.findAll();
 
-        List<OnibusDTO> onibus = linhas.stream()
+        return linhas.stream()
                 .filter(linha -> linha.getCoordenadas() != null && !linha.getCoordenadas().isEmpty())
                 .map(linha -> {
                     OnibusDTO onibusDTO = modelMapper.map(linha, OnibusDTO.class);
