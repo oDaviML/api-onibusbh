@@ -20,16 +20,19 @@ import com.dmware.api_onibusbh.repositories.DicionarioRepository;
 @Service
 public class DicionarioService {
 
-      @Autowired
-      private DicionarioRepository dicionarioRepository;
-      @Autowired
-      private ModelMapper modelMapper;
-      @Autowired
-      private APIService apiService;
+    private final DicionarioRepository dicionarioRepository;
+    private final ModelMapper modelMapper;
+    private final APIService apiService;
 
-      private static final Logger logger = LoggerFactory.getLogger(LinhasService.class);
+    private static final Logger logger = LoggerFactory.getLogger(DicionarioService.class);
 
-      public List<DicionarioDTO> fetchDicionarios() {
+    public DicionarioService(DicionarioRepository dicionarioRepository, ModelMapper modelMapper, APIService apiService) {
+        this.dicionarioRepository = dicionarioRepository;
+        this.modelMapper = modelMapper;
+        this.apiService = apiService;
+    }
+
+    public List<DicionarioDTO> fetchDicionarios() {
             List<DicionarioEntity> dicionarioEntityList = dicionarioRepository.findAll();
             List<DicionarioDTO> dicionarioDTOList = modelMapper.map(dicionarioEntityList,
                         new TypeToken<List<DicionarioDTO>>() {

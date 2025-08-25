@@ -9,7 +9,6 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,12 +21,15 @@ import java.util.stream.Collectors;
 public class LinhasService {
 
     private static final Logger logger = LoggerFactory.getLogger(LinhasService.class);
-    @Autowired
-    private LinhasRepository linhasRepository;
-    @Autowired
-    private ModelMapper modelMapper;
-    @Autowired
-    private APIService apiService;
+    private final LinhasRepository linhasRepository;
+    private final ModelMapper modelMapper;
+    private final APIService apiService;
+
+    public LinhasService(LinhasRepository linhasRepository, ModelMapper modelMapper, APIService apiService) {
+        this.linhasRepository = linhasRepository;
+        this.modelMapper = modelMapper;
+        this.apiService = apiService;
+    }
 
     public List<LinhaDTO> fetchLinhas() {
         List<LinhaEntity> linhaEntities = linhasRepository.findAll();

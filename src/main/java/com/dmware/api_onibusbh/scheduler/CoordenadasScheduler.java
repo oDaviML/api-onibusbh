@@ -3,6 +3,7 @@ package com.dmware.api_onibusbh.scheduler;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import com.dmware.api_onibusbh.services.APIService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
