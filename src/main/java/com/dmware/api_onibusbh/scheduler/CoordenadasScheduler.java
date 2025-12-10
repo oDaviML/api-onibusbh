@@ -23,7 +23,6 @@ public class CoordenadasScheduler {
         this.onibusService = onibusService;
     }
 
-    @Async
     @Scheduled(fixedDelay = 20, timeUnit = TimeUnit.SECONDS)
     public void fetchCoordenadasOnibus() {
         List<CoordenadaDTO> coordenadas = apiService.getOnibusCoordenadaBH();
