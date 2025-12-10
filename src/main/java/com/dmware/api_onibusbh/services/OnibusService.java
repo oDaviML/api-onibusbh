@@ -110,6 +110,10 @@ public class OnibusService {
                     .values().stream()
                     .filter(c -> c.getNumeroLinha() != null)
                     .collect(Collectors.groupingBy(CoordenadaDTO::getNumeroLinha));
+             
+             // DEBUG: Logar algumas chaves disponíveis no mapa de coordenadas
+             logger.info("Chaves (NL) disponíveis nas novas coordenadas: {}", 
+                     mapaNovasCoordenadasPorLinha.keySet().stream().limit(10).toList());
         }
 
         LocalDateTime dataLimite = LocalDateTime.now().minusMinutes(ttlMinutes);
@@ -130,6 +134,14 @@ public class OnibusService {
 
             // Merge com as novas coordenadas (se houver para esta linha)
             List<CoordenadaDTO> novasDaLinha = mapaNovasCoordenadasPorLinha.get(linha.getNumeroLinha());
+            
+            // DEBUG: Se achou coordenadas para a linha, avisa
+            if (novasDaLinha != null && !novasDaLinha.isEmpty()) {
+                // logger.info("Encontradas {} coordenadas para linha {}", novasDaLinha.size(), linha.getNumeroLinha());
+            } else if (mapaNovasCoordenadasPorLinha.containsKey(linha.getNumeroLinha())) {
+                 logger.warn("Chave existe mas lista é nula/vazia para linha {}", linha.getNumeroLinha());
+            }
+
             if (novasDaLinha != null) {
                 for (CoordenadaDTO nova : novasDaLinha) {
                     veiculosMap.put(nova.getNumeroVeiculo(), nova);
