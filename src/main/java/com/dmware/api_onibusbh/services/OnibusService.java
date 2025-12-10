@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -40,6 +41,9 @@ public class OnibusService {
     private String BASE_PATH;
     @Value("${FILE_NAME}")
     private String FILE_NAME;
+
+    @Value("${api.onibus.coordenadas.ttl-minutes:20}")
+    private int ttlMinutes;
 
     private final LinhasRepository linhasRepository;
     private final ModelMapper modelMapper;
@@ -108,45 +112,78 @@ public class OnibusService {
             return;
         }
 
-        List<CoordenadaDTO> coordenadas = fetchCoordenadas();
-        if (coordenadas.isEmpty()) {
-            logger.info("Nenhuma coordenada encontrada para processar.");
-            return;
+        List<CoordenadaDTO> todasCoordenadasNovas = fetchCoordenadas();
+        
+        // Agrupa as coordenadas novas mais recentes por número de linha
+        Map<Integer, List<CoordenadaDTO>> mapaNovasCoordenadasPorLinha;
+        if (todasCoordenadasNovas.isEmpty()) {
+            logger.info("Nenhuma coordenada nova encontrada. Executando apenas limpeza por TTL.");
+            mapaNovasCoordenadasPorLinha = Collections.emptyMap();
+        } else {
+             mapaNovasCoordenadasPorLinha = todasCoordenadasNovas.stream()
+                    .collect(Collectors.toMap(
+                            CoordenadaDTO::getNumeroVeiculo,
+                            Function.identity(),
+                            BinaryOperator.maxBy(Comparator.comparing(CoordenadaDTO::getHorario))
+                    ))
+                    .values().stream()
+                    .filter(c -> c.getNumeroLinha() != null)
+                    .collect(Collectors.groupingBy(CoordenadaDTO::getNumeroLinha));
         }
 
-        // Agrupa as coordenadas mais recentes por número de linha
-        Map<Integer, List<CoordenadaDTO>> coordenadasPorLinha = coordenadas.stream()
-                .collect(Collectors.toMap(
-                        CoordenadaDTO::getNumeroVeiculo,
-                        Function.identity(),
-                        BinaryOperator.maxBy(Comparator.comparing(CoordenadaDTO::getHorario))
-                ))
-                .values().stream()
-                .filter(c -> c.getNumeroLinha() != null)
-                .collect(Collectors.groupingBy(CoordenadaDTO::getNumeroLinha));
+        LocalDateTime dataLimite = LocalDateTime.now().minusMinutes(ttlMinutes);
+        List<LinhaEntity> linhasParaSalvar = new ArrayList<>();
 
-        // Atualiza as linhas existentes com as novas coordenadas
-        List<LinhaEntity> linhasParaSalvar = linhasExistentes.stream()
-                .filter(linha -> coordenadasPorLinha.containsKey(linha.getNumeroLinha()))
-                .peek(linha -> {
-                    List<CoordenadaDTO> coordenadasDaLinha = coordenadasPorLinha.get(linha.getNumeroLinha());
-                    linha.setCoordenadas(coordenadasDaLinha);
+        for (LinhaEntity linha : linhasExistentes) {
+            boolean houveAlteracao = false;
+            
+            // Mapa de veículos atuais da linha (NumeroVeiculo -> DTO)
+            Map<String, CoordenadaDTO> veiculosMap = new HashMap<>();
+            if (linha.getCoordenadas() != null) {
+                for (CoordenadaDTO c : linha.getCoordenadas()) {
+                    if (c.getNumeroVeiculo() != null) {
+                        veiculosMap.put(c.getNumeroVeiculo(), c);
+                    }
+                }
+            }
 
-                    List<Character> sentidos = coordenadasDaLinha.stream()
-                            .map(CoordenadaDTO::getSentido)
-                            .filter(sentido -> sentido != null && sentido != '0')
-                            .distinct()
-                            .toList();
+            // Merge com as novas coordenadas (se houver para esta linha)
+            List<CoordenadaDTO> novasDaLinha = mapaNovasCoordenadasPorLinha.get(linha.getNumeroLinha());
+            if (novasDaLinha != null) {
+                for (CoordenadaDTO nova : novasDaLinha) {
+                    veiculosMap.put(nova.getNumeroVeiculo(), nova);
+                    houveAlteracao = true;
+                }
+            }
 
-                    linha.setSentidoIsUnique(!sentidos.isEmpty() && sentidos.size() == 1);
-                })
-                .toList();
+            // Filtragem por TTL (remove veículos antigos)
+            int tamanhoAntes = veiculosMap.size();
+            List<CoordenadaDTO> veiculosAtualizados = veiculosMap.values().stream()
+                    .filter(c -> c.getHorario() != null && c.getHorario().isAfter(dataLimite))
+                    .collect(Collectors.toList());
+            
+            if (tamanhoAntes != veiculosAtualizados.size()) houveAlteracao = true;
+
+            if (houveAlteracao) {
+                linha.setCoordenadas(veiculosAtualizados);
+
+                List<Character> sentidos = veiculosAtualizados.stream()
+                        .map(CoordenadaDTO::getSentido)
+                        .filter(sentido -> sentido != null && sentido != '0')
+                        .distinct()
+                        .toList();
+
+                linha.setSentidoIsUnique(!sentidos.isEmpty() && sentidos.size() == 1);
+                
+                linhasParaSalvar.add(linha);
+            }
+        }
 
         if (!linhasParaSalvar.isEmpty()) {
             linhasRepository.saveAll(linhasParaSalvar);
-            logger.info("Coordenadas salvas com sucesso. Total de linhas atualizadas: {}", linhasParaSalvar.size());
+            logger.info("Sincronização concluída. Linhas atualizadas: {}", linhasParaSalvar.size());
         } else {
-            logger.info("Nenhuma linha com novas coordenadas para atualizar.");
+            logger.info("Nenhuma alteração necessária nas linhas.");
         }
     }
 
