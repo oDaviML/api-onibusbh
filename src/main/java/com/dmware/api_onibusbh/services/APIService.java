@@ -1,14 +1,10 @@
 package com.dmware.api_onibusbh.services;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.dmware.api_onibusbh.dto.CoordenadaDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -24,11 +20,6 @@ import reactor.core.publisher.Mono;
 
 @Service
 public class APIService {
-
-    @Value("${BASE_PATH}")
-    private String BASE_PATH;
-    @Value("${FILE_NAME}")
-    private String FILE_NAME;
 
     private final WebClientConfig webClientConfig;
     private final ObjectMapper objectMapper;
@@ -86,7 +77,7 @@ public class APIService {
         }
     }
 
-    public void getOnibusCoordenadaBH() throws IOException {
+    public List<CoordenadaDTO> getOnibusCoordenadaBH() {
         System.out.printf("Acessando diretamente.%n");
         List<String> responses = fetchCoordenadasDirectly();
 
@@ -94,7 +85,7 @@ public class APIService {
             throw new IllegalStateException("Não foi possível obter resposta de um ou mais endpoints.");
         }
 
-        processAndSaveCoordenadas(responses);
+        return processAndReturnCoordenadas(responses);
     }
 
     private List<String> fetchCoordenadasDirectly() {
@@ -111,28 +102,21 @@ public class APIService {
         return Flux.merge(monoParamD, monoParamSD).collectList().block();
     }
 
-    private void processAndSaveCoordenadas(List<String> responses) throws IOException {
+    private List<CoordenadaDTO> processAndReturnCoordenadas(List<String> responses) {
         String jsonD = responses.get(0);
         String jsonSD = responses.get(1);
+        List<CoordenadaDTO> todasCoordenadas = new ArrayList<>();
 
         try {
-            TypeReference<List<Map<String, Object>>> typeRef = new TypeReference<>() {
-            };
-            List<Map<String, Object>> listD = objectMapper.readValue(jsonD, typeRef);
-            List<Map<String, Object>> listSD = objectMapper.readValue(jsonSD, typeRef);
+            TypeReference<List<CoordenadaDTO>> typeRef = new TypeReference<>() {};
+            
+            List<CoordenadaDTO> listD = objectMapper.readValue(jsonD, typeRef);
+            List<CoordenadaDTO> listSD = objectMapper.readValue(jsonSD, typeRef);
 
-            List<Map<String, Object>> combinedList = new ArrayList<>(listD);
-            combinedList.addAll(listSD);
+            if(listD != null) todasCoordenadas.addAll(listD);
+            if(listSD != null) todasCoordenadas.addAll(listSD);
 
-            String finalJson = objectMapper.writeValueAsString(combinedList);
-
-            Path basePath = Paths.get(BASE_PATH);
-            if (!Files.exists(basePath)) {
-                Files.createDirectories(basePath);
-            }
-
-            Path filePath = basePath.resolve(FILE_NAME);
-            Files.writeString(filePath, finalJson);
+            return todasCoordenadas;
 
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Erro ao processar o JSON das coordenadas.", e);

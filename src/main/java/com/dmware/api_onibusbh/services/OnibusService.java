@@ -2,31 +2,20 @@ package com.dmware.api_onibusbh.services;
 
 import com.dmware.api_onibusbh.config.WebClientConfig;
 import com.dmware.api_onibusbh.dto.CoordenadaDTO;
-import com.dmware.api_onibusbh.dto.LinhaDTO;
 import com.dmware.api_onibusbh.dto.OnibusDTO;
 import com.dmware.api_onibusbh.entities.LinhaEntity;
 import com.dmware.api_onibusbh.exceptions.CoordenadasNotFoundException;
 import com.dmware.api_onibusbh.exceptions.LinhaNotFoundException;
-import com.dmware.api_onibusbh.exceptions.LinhasNotFoundException;
 import com.dmware.api_onibusbh.repositories.LinhasRepository;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -36,11 +25,6 @@ import java.util.stream.Collectors;
 public class OnibusService {
 
     private static final Logger logger = LoggerFactory.getLogger(OnibusService.class);
-
-    @Value("${BASE_PATH}")
-    private String BASE_PATH;
-    @Value("${FILE_NAME}")
-    private String FILE_NAME;
 
     @Value("${api.onibus.coordenadas.ttl-minutes:20}")
     private int ttlMinutes;
@@ -97,7 +81,7 @@ public class OnibusService {
         return coordenadas;
     }
 
-    public void salvaCoordenadas() {
+    public void salvaCoordenadas(List<CoordenadaDTO> todasCoordenadasNovas) {
         logger.info("Iniciando o salvamento das coordenadas...");
         List<LinhaEntity> linhasExistentes;
         try {
@@ -112,11 +96,9 @@ public class OnibusService {
             return;
         }
 
-        List<CoordenadaDTO> todasCoordenadasNovas = fetchCoordenadas();
-        
         // Agrupa as coordenadas novas mais recentes por número de linha
         Map<Integer, List<CoordenadaDTO>> mapaNovasCoordenadasPorLinha;
-        if (todasCoordenadasNovas.isEmpty()) {
+        if (todasCoordenadasNovas == null || todasCoordenadasNovas.isEmpty()) {
             logger.info("Nenhuma coordenada nova encontrada. Executando apenas limpeza por TTL.");
             mapaNovasCoordenadasPorLinha = Collections.emptyMap();
         } else {
@@ -131,7 +113,7 @@ public class OnibusService {
                     .collect(Collectors.groupingBy(CoordenadaDTO::getNumeroLinha));
         }
 
-        LocalDateTime dataLimite = LocalDateTime.now().minusMinutes(ttlMinutes);
+        LocalDateTime dataLimite = LocalDateTime.now(ZoneId.of("America/Sao_Paulo")).minusMinutes(ttlMinutes);
         List<LinhaEntity> linhasParaSalvar = new ArrayList<>();
 
         for (LinhaEntity linha : linhasExistentes) {
@@ -149,6 +131,7 @@ public class OnibusService {
 
             // Merge com as novas coordenadas (se houver para esta linha)
             List<CoordenadaDTO> novasDaLinha = mapaNovasCoordenadasPorLinha.get(linha.getNumeroLinha());
+
             if (novasDaLinha != null) {
                 for (CoordenadaDTO nova : novasDaLinha) {
                     veiculosMap.put(nova.getNumeroVeiculo(), nova);
@@ -184,25 +167,6 @@ public class OnibusService {
             logger.info("Sincronização concluída. Linhas atualizadas: {}", linhasParaSalvar.size());
         } else {
             logger.info("Nenhuma alteração necessária nas linhas.");
-        }
-    }
-
-    public List<CoordenadaDTO> fetchCoordenadas() {
-        try {
-            Path file = Paths.get(BASE_PATH, FILE_NAME);
-            if (!Files.exists(file)) {
-                logger.warn("Arquivo de coordenadas não encontrado");
-                throw new CoordenadasNotFoundException();
-            }
-
-            return objectMapper.readValue(
-                    file.toFile(),
-                    new TypeReference<>() {
-                    });
-
-        } catch (CoordenadasNotFoundException | IOException e) {
-            logger.error("Erro ao ler arquivo de coordenadas");
-            throw new RuntimeException(e);
         }
     }
 }

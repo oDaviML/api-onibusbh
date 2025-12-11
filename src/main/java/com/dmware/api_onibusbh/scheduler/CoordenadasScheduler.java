@@ -1,10 +1,11 @@
 package com.dmware.api_onibusbh.scheduler;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.dmware.api_onibusbh.dto.CoordenadaDTO;
 import com.dmware.api_onibusbh.services.APIService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -22,11 +23,10 @@ public class CoordenadasScheduler {
         this.onibusService = onibusService;
     }
 
-    @Async
     @Scheduled(fixedDelay = 20, timeUnit = TimeUnit.SECONDS)
-    public void fetchCoordenadasOnibus() throws IOException {
-        apiService.getOnibusCoordenadaBH();
-        onibusService.salvaCoordenadas();
+    public void fetchCoordenadasOnibus() {
+        List<CoordenadaDTO> coordenadas = apiService.getOnibusCoordenadaBH();
+        onibusService.salvaCoordenadas(coordenadas);
     }
 
 }
