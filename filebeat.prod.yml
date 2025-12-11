@@ -5,7 +5,7 @@ filebeat.autodiscover:
       templates:
         - condition:
             contains:
-              docker.container.name: springboot-app_prod
+              docker.container.name: api-onibusbh
           config:
             - type: container
               paths:
