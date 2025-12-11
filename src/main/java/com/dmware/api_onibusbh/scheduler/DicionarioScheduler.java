@@ -1,7 +1,9 @@
 package com.dmware.api_onibusbh.scheduler;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,6 +23,11 @@ public class DicionarioScheduler {
     @Async
       @Scheduled(fixedDelay = 12, timeUnit = TimeUnit.HOURS)
       public void salvaDicionarioBanco() {
-            dicionarioService.salvarDicionarioBanco();
+            try {
+                  MDC.put("transaction_id", UUID.randomUUID().toString());
+                  dicionarioService.salvarDicionarioBanco();
+            } finally {
+                  MDC.clear();
+            }
       }
 }
