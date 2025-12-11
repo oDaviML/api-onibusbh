@@ -40,6 +40,6 @@ processors:
       tags: ["production", "api-onibusbh"]
 
 output.elasticsearch:
-  hosts: ['${ELASTIC_HOST}']
+  hosts: ['${ELASTIC_HOST}:443']
   protocol: "https"
   # ssl.verification_mode: none
