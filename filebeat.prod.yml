@@ -1,3 +1,19 @@
+filebeat.inputs:
+- type: filestream
+  id: api-onibusbh-prod
+  enabled: true
+  paths:
+    - /usr/share/filebeat/logs/*.json
+  parsers:
+    - ndjson:
+        target: ""
+        overwrite_keys: true
+        add_error_key: true
+
+logging.level: debug
+logging.to_stderr: true
+logging.selectors: ["*"]
+
 filebeat.autodiscover:
   providers:
     - type: docker
