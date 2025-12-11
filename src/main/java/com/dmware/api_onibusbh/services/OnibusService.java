@@ -161,7 +161,7 @@ public class OnibusService {
 
         if (!linhasParaSalvar.isEmpty()) {
             linhasRepository.saveAll(linhasParaSalvar);
-            logger.info("Sincronização concluída", kv("linhas_atualizadas", linhasParaSalvar.size()));
+            logger.info("Processo de atualização de coordenadas finalizado. Total de linhas com veículos atualizados: {}", linhasParaSalvar.size(), kv("linhas_atualizadas", linhasParaSalvar.size()));
         } else {
             logger.info("Nenhuma alteração necessária nas linhas.");
         }

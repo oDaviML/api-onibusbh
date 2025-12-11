@@ -17,6 +17,7 @@ import com.dmware.api_onibusbh.services.OnibusService;
 @Component
 public class CoordenadasScheduler {
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CoordenadasScheduler.class);
     private final APIService apiService;
     private final OnibusService onibusService;
 
@@ -29,8 +30,10 @@ public class CoordenadasScheduler {
     public void fetchCoordenadasOnibus() {
         try {
             MDC.put("transaction_id", UUID.randomUUID().toString());
+            logger.info("Job de Coordenadas iniciado.");
             List<CoordenadaDTO> coordenadas = apiService.getOnibusCoordenadaBH();
             onibusService.salvaCoordenadas(coordenadas);
+            logger.info("Job de Coordenadas finalizado.");
         } finally {
             MDC.clear();
         }

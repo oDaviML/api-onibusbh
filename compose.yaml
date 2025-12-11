@@ -7,3 +7,19 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=admin
     ports:
       - "27017:27017"
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.11.1
+    user: root
+    environment:
+      - ELASTIC_HOST=${ELASTIC_HOST}
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./logs:/host_logs:ro
+    command: ["--strict.perms=false"]
+    restart: unless-stopped

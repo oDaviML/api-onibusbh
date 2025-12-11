@@ -1,0 +1,29 @@
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+      templates:
+        - condition:
+            contains:
+              docker.container.name: springboot-app_prod
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
+              processors:
+                - decode_json_fields:
+                    fields: ["message"]
+                    target: ""
+                    overwrite_keys: true
+                    add_error_key: true
+
+processors:
+  - add_docker_metadata: ~
+  - add_cloud_metadata: ~
+  - add_tags:
+      tags: ["production", "api-onibusbh"]
+
+output.elasticsearch:
+  hosts: ['${ELASTIC_HOST}']
+  protocol: "https"
+  # ssl.verification_mode: none

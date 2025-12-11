@@ -100,7 +100,7 @@ public class LinhasService {
 
         if (!linhasParaSalvar.isEmpty()) {
             linhasRepository.saveAll(linhasParaSalvar);
-            logger.info("Linhas normais sincronizadas com sucesso", kv("total_sincronizado", linhasParaSalvar.size()));
+            logger.info("Processo de sincronização finalizado. Total de linhas atualizadas ou inseridas: {}", linhasParaSalvar.size(), kv("total_sincronizado", linhasParaSalvar.size()));
         } else {
             logger.info("Nenhuma linha nova ou atualizada encontrada para sincronização.");
         }

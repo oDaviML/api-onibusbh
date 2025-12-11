@@ -1,0 +1,44 @@
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /host_logs/*.json
+  json.keys_under_root: true
+  json.overwrite_keys: true
+  processors:
+    - add_tags:
+        tags: ["local_dev_ide"]
+
+- type: container
+  paths: 
+    - '/var/lib/docker/containers/*/*.log'
+  processors:
+  - add_docker_metadata:
+      host: "unix:///var/run/docker.sock"
+
+  - drop_event:
+      when:
+        not:
+          contains:
+            container.name: "springboot-app_prod"
+
+  - decode_json_fields:
+      fields: ["message"]
+      target: ""
+      overwrite_keys: true
+      process_array: false
+      max_depth: 1
+
+output.elasticsearch:
+  hosts: ["${ELASTIC_HOST:localhost:9200}"]
+  ssl.verification_mode: none
+
+  index: "api-onibusbh-prod-%{+yyyy.MM.dd}"
+
+setup.template.name: "api-onibusbh"
+setup.template.pattern: "api-onibusbh-*"
+setup.ilm.enabled: false
+
+logging.level: debug
+logging.to_stderr: true
+logging.selectors: ["*"]

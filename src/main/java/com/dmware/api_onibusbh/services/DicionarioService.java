@@ -78,7 +78,7 @@ public class DicionarioService {
                   dicionarioRepository
                               .saveAll(modelMapper.map(dadosParaSalvar, new TypeToken<List<DicionarioEntity>>() {
                               }.getType()));
-                  logger.info("Sincronização de dicionário concluída", kv("total_processado", dadosParaSalvar.size()));
+                  logger.info("Sincronização de dicionário concluída. Total de itens processados: {}", dadosParaSalvar.size(), kv("total_processado", dadosParaSalvar.size()));
             } else {
                   logger.info("Nenhuma alteração necessária no dicionário");
             }

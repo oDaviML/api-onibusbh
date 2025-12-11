@@ -28,6 +28,15 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/api-onibusbh:latest
 
+    - name: Copy config to EC2
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        source: "filebeat.prod.yml"
+        target: "/home/${{ secrets.EC2_USERNAME }}/api-onibusbh/"
+
     - name: Deploy to EC2
       uses: appleboy/ssh-action@master
       with:
@@ -35,8 +44,10 @@ jobs:
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          docker stop api-onibusbh || true
-          docker rm api-onibusbh || true
+          WORKDIR="/home/${{ secrets.EC2_USERNAME }}/api-onibusbh"
+          
+          docker stop api-onibusbh filebeat-prod || true
+          docker rm api-onibusbh filebeat-prod || true
           
           docker pull ${{ secrets.DOCKER_USERNAME }}/api-onibusbh:latest
           
@@ -49,4 +60,17 @@ jobs:
             -e MONGO_DATABASE=${{ secrets.MONGO_DATABASE }} \
             -e MONGO_USERNAME=${{ secrets.MONGO_USERNAME }} \
             -e MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }} \
+            -e ELASTIC_HOST=${{ secrets.ELASTIC_HOST }} \
+            --restart unless-stopped \
             ${{ secrets.DOCKER_USERNAME }}/api-onibusbh:latest
+            
+          docker run -d \
+            --name filebeat-prod \
+            --user root \
+            --restart unless-stopped \
+            -e ELASTIC_HOST=${{ secrets.ELASTIC_HOST }} \
+            -v /var/lib/docker/containers:/var/lib/docker/containers:ro \
+            -v /var/run/docker.sock:/var/run/docker.sock:ro \
+            -v $WORKDIR/filebeat.prod.yml:/usr/share/filebeat/filebeat.yml:ro \
+            docker.elastic.co/beats/filebeat:8.15.0 \
+            --strict.perms=false
