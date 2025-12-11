@@ -17,6 +17,8 @@ import com.dmware.api_onibusbh.dto.DicionarioDTO;
 import com.dmware.api_onibusbh.entities.DicionarioEntity;
 import com.dmware.api_onibusbh.repositories.DicionarioRepository;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 @Service
 public class DicionarioService {
 
@@ -48,34 +50,37 @@ public class DicionarioService {
 
             List<DicionarioDTO> listaDados = apiService.getDicionarioAPIBH();
             List<DicionarioEntity> dadosExistentes = dicionarioRepository.findAll();
-            logger.info("Dados existentes no banco de dados: " + dadosExistentes.size());
+            logger.info("Estado inicial do banco", kv("total_existente", dadosExistentes.size()));
 
-            // Mapeia os dados da api para facilitar a comparação
             Map<String, DicionarioEntity> dicionarioMap = dadosExistentes.stream()
                         .collect(Collectors.toMap(DicionarioEntity::getIdDicionario,
                                     dicionarioEntity -> dicionarioEntity));
 
             List<DicionarioDTO> dadosParaSalvar = new ArrayList<>();
 
-            // Realiza a comparação, se for diferente, insere no banco de dados
             for (DicionarioDTO dicionarioDTO : listaDados) {
                   DicionarioEntity dicionarioComparacao = dicionarioMap.get(dicionarioDTO.getId());
 
                   if (dicionarioComparacao == null) {
-                        logger.info("Novo dado encontrado: " + dicionarioDTO.getNomeArquivo());
+                        logger.info("Novo dicionário identificado", 
+                            kv("nome_arquivo", dicionarioDTO.getNomeArquivo()), 
+                            kv("tipo_operacao", "insercao"));
                         dadosParaSalvar.add(dicionarioDTO);
                   } else if (!dicionarioDTO.getNomeArquivo().equals(dicionarioComparacao.getNomeArquivo())) {
-                        logger.info("Novo dado atualizado: " + dicionarioDTO.getNomeArquivo());
+                        logger.info("Dicionário atualizado identificado", 
+                            kv("nome_arquivo", dicionarioDTO.getNomeArquivo()), 
+                            kv("tipo_operacao", "atualizacao"));
                         dadosParaSalvar.add(dicionarioDTO);
                   }
             }
 
-            // Salva apenas os dados que forem novos ou atualizados
             if (!dadosParaSalvar.isEmpty()) {
-                  logger.info("Dicionário novo ou atualizados: " + dadosParaSalvar.size());
                   dicionarioRepository
                               .saveAll(modelMapper.map(dadosParaSalvar, new TypeToken<List<DicionarioEntity>>() {
                               }.getType()));
+                  logger.info("Sincronização de dicionário concluída. Total de itens processados: {}", dadosParaSalvar.size(), kv("total_processado", dadosParaSalvar.size()));
+            } else {
+                  logger.info("Nenhuma alteração necessária no dicionário");
             }
       }
 

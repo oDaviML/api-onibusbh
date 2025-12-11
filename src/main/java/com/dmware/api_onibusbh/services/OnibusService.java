@@ -21,6 +21,8 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 @Service
 public class OnibusService {
 
@@ -85,7 +87,6 @@ public class OnibusService {
         logger.info("Iniciando o salvamento das coordenadas...");
         List<LinhaEntity> linhasExistentes;
         try {
-            // Busca as entidades diretamente para evitar conversão DTO -> Entity
             linhasExistentes = linhasRepository.findAll();
             if (linhasExistentes.isEmpty()) {
                 logger.warn("Nenhuma linha encontrada no banco de dados. Coordenadas não serão salvas.");
@@ -96,7 +97,6 @@ public class OnibusService {
             return;
         }
 
-        // Agrupa as coordenadas novas mais recentes por número de linha
         Map<Integer, List<CoordenadaDTO>> mapaNovasCoordenadasPorLinha;
         if (todasCoordenadasNovas == null || todasCoordenadasNovas.isEmpty()) {
             logger.info("Nenhuma coordenada nova encontrada. Executando apenas limpeza por TTL.");
@@ -119,7 +119,6 @@ public class OnibusService {
         for (LinhaEntity linha : linhasExistentes) {
             boolean houveAlteracao = false;
             
-            // Mapa de veículos atuais da linha (NumeroVeiculo -> DTO)
             Map<String, CoordenadaDTO> veiculosMap = new HashMap<>();
             if (linha.getCoordenadas() != null) {
                 for (CoordenadaDTO c : linha.getCoordenadas()) {
@@ -129,7 +128,6 @@ public class OnibusService {
                 }
             }
 
-            // Merge com as novas coordenadas (se houver para esta linha)
             List<CoordenadaDTO> novasDaLinha = mapaNovasCoordenadasPorLinha.get(linha.getNumeroLinha());
 
             if (novasDaLinha != null) {
@@ -139,7 +137,6 @@ public class OnibusService {
                 }
             }
 
-            // Filtragem por TTL (remove veículos antigos)
             int tamanhoAntes = veiculosMap.size();
             List<CoordenadaDTO> veiculosAtualizados = veiculosMap.values().stream()
                     .filter(c -> c.getHorario() != null && c.getHorario().isAfter(dataLimite))
@@ -164,7 +161,7 @@ public class OnibusService {
 
         if (!linhasParaSalvar.isEmpty()) {
             linhasRepository.saveAll(linhasParaSalvar);
-            logger.info("Sincronização concluída. Linhas atualizadas: {}", linhasParaSalvar.size());
+            logger.info("Processo de atualização de coordenadas finalizado. Total de linhas com veículos atualizados: {}", linhasParaSalvar.size(), kv("linhas_atualizadas", linhasParaSalvar.size()));
         } else {
             logger.info("Nenhuma alteração necessária nas linhas.");
         }

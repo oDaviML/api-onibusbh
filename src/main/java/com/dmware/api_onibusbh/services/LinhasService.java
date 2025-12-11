@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 @Service
 public class LinhasService {
 
@@ -79,7 +81,7 @@ public class LinhasService {
         logger.info("Iniciando sincronização de linhas normais.");
         List<LinhaDTO> linhasDaAPI = apiService.getLinhasAPIBH();
         List<LinhaEntity> linhasExistentes = linhasRepository.findAll();
-        logger.info("Linhas existentes no banco: {}", linhasExistentes.size());
+        logger.info("Estado inicial do banco", kv("total_existente", linhasExistentes.size()));
 
         Map<Integer, LinhaEntity> linhasExistentesMap = linhasExistentes.stream()
                 .collect(Collectors.toMap(LinhaEntity::getIdLinha, linha -> linha));
@@ -98,7 +100,7 @@ public class LinhasService {
 
         if (!linhasParaSalvar.isEmpty()) {
             linhasRepository.saveAll(linhasParaSalvar);
-            logger.info("Linhas normais sincronizadas com sucesso. Total de linhas salvas/atualizadas: {}", linhasParaSalvar.size());
+            logger.info("Processo de sincronização finalizado. Total de linhas atualizadas ou inseridas: {}", linhasParaSalvar.size(), kv("total_sincronizado", linhasParaSalvar.size()));
         } else {
             logger.info("Nenhuma linha nova ou atualizada encontrada para sincronização.");
         }
