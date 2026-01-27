@@ -61,6 +61,10 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             long waitForRefill = probe.getNanosToWaitForRefill();
             long retryAfterSeconds = TimeUnit.NANOSECONDS.toSeconds(waitForRefill);
 
+            if (waitForRefill % TimeUnit.SECONDS.toNanos(1) != 0) {
+                retryAfterSeconds++;
+            }
+
             handlerExceptionResolver.resolveException(request, response, null,
                     new RateLimitExceededException(
                             "Rate limit exceeded. Try again in " + retryAfterSeconds + " seconds.",
@@ -71,7 +75,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     private Bucket createNewBucket(String key) {
         return Bucket.builder()
-                .addLimit(limit -> limit.capacity(capacity).refillGreedy(tokens, Duration.ofSeconds(durationSeconds)))
+                .addLimit(limit -> limit.capacity(capacity).refillIntervally(tokens, Duration.ofSeconds(durationSeconds)))
                 .build();
     }
 }
