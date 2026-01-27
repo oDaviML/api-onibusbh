@@ -59,7 +59,7 @@ public class OnibusService {
                 }).collect(Collectors.toList());
     }
 
-    @Cacheable(value = "onibusPorLinha", key = "#numeroLinha")
+    @Cacheable(value = "onibusPorLinha", key = "{#numeroLinha, #sentido}")
     public List<CoordenadaDTO> listarPorNumeroLinha(Integer numeroLinha, Optional<Integer> sentido) {
         Optional<LinhaEntity> linha = linhasRepository.findByNumeroLinha(numeroLinha);
 
