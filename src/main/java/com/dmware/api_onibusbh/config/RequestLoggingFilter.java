@@ -1,5 +1,6 @@
 package com.dmware.api_onibusbh.config;
 
+import com.dmware.api_onibusbh.utils.ClientIpUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,10 +36,11 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         MDC.put(TRANSACTION_ID_KEY, transactionId);
 
         try {
+            String clientIp = ClientIpUtils.getClientIp(request);
             logger.info("Requisição recebida: {} {}", request.getMethod(), request.getRequestURI(),
                     kv("method", request.getMethod()),
                     kv("uri", request.getRequestURI()),
-                    kv("client_ip", request.getRemoteAddr()),
+                    kv("client_ip", clientIp),
                     kv("user_agent", request.getHeader("User-Agent"))
             );
 
@@ -52,7 +54,8 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
                     response.getStatus(),
                     duration,
                     kv("status_code", response.getStatus()),
-                    kv("duration_ms", duration)
+                    kv("duration_ms", duration),
+                    kv("client_ip", clientIp)
             );
 
         } finally {

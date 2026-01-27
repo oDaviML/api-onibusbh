@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 @Component
 public class DicionarioScheduler {
 
@@ -22,11 +24,16 @@ public class DicionarioScheduler {
     @Async
     @Scheduled(fixedDelay = 12, timeUnit = TimeUnit.HOURS)
     public void salvaDicionarioBanco() {
+        long startTime = System.currentTimeMillis();
         try {
             MDC.put("transaction_id", UUID.randomUUID().toString());
-            logger.info("Job de Dicionário iniciado.");
+            logger.info("Job de Dicionário iniciado.", kv("job_name", "Dicionario"), kv("status", "STARTED"));
             dicionarioService.salvarDicionarioBanco();
-            logger.info("Job de Dicionário finalizado.");
+            long duration = System.currentTimeMillis() - startTime;
+            logger.info("Job de Dicionário finalizado.", 
+                kv("job_name", "Dicionario"), 
+                kv("status", "FINISHED"), 
+                kv("duration_ms", duration));
         } finally {
             MDC.clear();
         }

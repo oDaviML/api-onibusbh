@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 @Component
 public class LinhaScheduler {
 
@@ -22,11 +24,16 @@ public class LinhaScheduler {
     @Async
     @Scheduled(fixedDelay = 12, timeUnit = TimeUnit.HOURS)
     public void fetchCoordenadasOnibus() {
+        long startTime = System.currentTimeMillis();
         try {
             MDC.put("transaction_id", UUID.randomUUID().toString());
-            logger.info("Job agendado iniciado: Atualização de Coordenadas/Linhas.");
+            logger.info("Job agendado iniciado: Atualização de Coordenadas/Linhas.", kv("job_name", "Linhas"), kv("status", "STARTED"));
             linhasService.salvaLinhasNormais();
-            logger.info("Job agendado finalizado: Atualização de Coordenadas/Linhas.");
+            long duration = System.currentTimeMillis() - startTime;
+            logger.info("Job agendado finalizado: Atualização de Coordenadas/Linhas.", 
+                kv("job_name", "Linhas"), 
+                kv("status", "FINISHED"), 
+                kv("duration_ms", duration));
         } finally {
             MDC.clear();
         }

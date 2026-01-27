@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 @Component
 public class CoordenadasScheduler {
 
@@ -25,12 +27,17 @@ public class CoordenadasScheduler {
 
     @Scheduled(fixedDelay = 20, timeUnit = TimeUnit.SECONDS)
     public void fetchCoordenadasOnibus() {
+        long startTime = System.currentTimeMillis();
         try {
             MDC.put("transaction_id", UUID.randomUUID().toString());
-            logger.info("Job de Coordenadas iniciado.");
+            logger.info("Job de Coordenadas iniciado.", kv("job_name", "Coordenadas"), kv("status", "STARTED"));
             List<CoordenadaDTO> coordenadas = apiService.getOnibusCoordenadaBH();
             onibusService.salvaCoordenadas(coordenadas);
-            logger.info("Job de Coordenadas finalizado.");
+            long duration = System.currentTimeMillis() - startTime;
+            logger.info("Job de Coordenadas finalizado.", 
+                kv("job_name", "Coordenadas"), 
+                kv("status", "FINISHED"), 
+                kv("duration_ms", duration));
         } finally {
             MDC.clear();
         }

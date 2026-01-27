@@ -1,6 +1,7 @@
 package com.dmware.api_onibusbh.infra;
 
 import com.dmware.api_onibusbh.exceptions.RateLimitExceededException;
+import com.dmware.api_onibusbh.utils.ClientIpUtils;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import jakarta.servlet.FilterChain;
@@ -40,16 +41,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String clientIp = request.getHeader("CF-Connecting-IP");
-        if (clientIp == null || clientIp.isEmpty()) {
-            clientIp = request.getHeader("X-Forwarded-For");
-            if (clientIp != null && !clientIp.isEmpty()) {
-                clientIp = clientIp.split(",")[0].trim();
-            }
-        }
-        if (clientIp == null || clientIp.isEmpty()) {
-            clientIp = request.getRemoteAddr();
-        }
+        String clientIp = ClientIpUtils.getClientIp(request);
         Bucket bucket = buckets.computeIfAbsent(clientIp, this::createNewBucket);
 
         ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
