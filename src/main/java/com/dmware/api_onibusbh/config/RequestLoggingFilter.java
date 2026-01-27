@@ -31,7 +31,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         if (transactionId == null || transactionId.isEmpty()) {
             transactionId = UUID.randomUUID().toString();
         }
-        
+
         MDC.put(TRANSACTION_ID_KEY, transactionId);
 
         try {
@@ -45,11 +45,11 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
 
             long duration = System.currentTimeMillis() - startTime;
-            
-            logger.info("Requisição finalizada: {} {} - Status: {} - Tempo: {}ms", 
-                    request.getMethod(), 
-                    request.getRequestURI(), 
-                    response.getStatus(), 
+
+            logger.info("Requisição finalizada: {} {} - Status: {} - Tempo: {}ms",
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    response.getStatus(),
                     duration,
                     kv("status_code", response.getStatus()),
                     kv("duration_ms", duration)

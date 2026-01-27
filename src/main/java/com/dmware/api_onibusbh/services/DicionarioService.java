@@ -1,21 +1,21 @@
 package com.dmware.api_onibusbh.services;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
+import com.dmware.api_onibusbh.dto.DicionarioDTO;
+import com.dmware.api_onibusbh.entities.DicionarioEntity;
 import com.dmware.api_onibusbh.exceptions.DicionarioNotFoundException;
+import com.dmware.api_onibusbh.repositories.DicionarioRepository;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import com.dmware.api_onibusbh.dto.DicionarioDTO;
-import com.dmware.api_onibusbh.entities.DicionarioEntity;
-import com.dmware.api_onibusbh.repositories.DicionarioRepository;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
@@ -34,54 +34,56 @@ public class DicionarioService {
         this.apiService = apiService;
     }
 
+    @Cacheable(value = "dicionarios")
     public List<DicionarioDTO> fetchDicionarios() {
-            List<DicionarioEntity> dicionarioEntityList = dicionarioRepository.findAll();
-            List<DicionarioDTO> dicionarioDTOList = modelMapper.map(dicionarioEntityList,
-                        new TypeToken<List<DicionarioDTO>>() {
-                        }.getType());
-            if (dicionarioDTOList.isEmpty()) {
-                  throw new DicionarioNotFoundException();
+        List<DicionarioEntity> dicionarioEntityList = dicionarioRepository.findAll();
+        List<DicionarioDTO> dicionarioDTOList = modelMapper.map(dicionarioEntityList,
+                new TypeToken<List<DicionarioDTO>>() {
+                }.getType());
+        if (dicionarioDTOList.isEmpty()) {
+            throw new DicionarioNotFoundException();
+        }
+        return dicionarioDTOList;
+    }
+
+    @CacheEvict(value = "dicionarios", allEntries = true)
+    public void salvarDicionarioBanco() {
+        logger.info("Iniciando sincronização dicionário");
+
+        List<DicionarioDTO> listaDados = apiService.getDicionarioAPIBH();
+        List<DicionarioEntity> dadosExistentes = dicionarioRepository.findAll();
+        logger.info("Estado inicial do banco", kv("total_existente", dadosExistentes.size()));
+
+        Map<String, DicionarioEntity> dicionarioMap = dadosExistentes.stream()
+                .collect(Collectors.toMap(DicionarioEntity::getIdDicionario,
+                        dicionarioEntity -> dicionarioEntity));
+
+        List<DicionarioDTO> dadosParaSalvar = new ArrayList<>();
+
+        for (DicionarioDTO dicionarioDTO : listaDados) {
+            DicionarioEntity dicionarioComparacao = dicionarioMap.get(dicionarioDTO.getId());
+
+            if (dicionarioComparacao == null) {
+                logger.info("Novo dicionário identificado",
+                        kv("nome_arquivo", dicionarioDTO.getNomeArquivo()),
+                        kv("tipo_operacao", "insercao"));
+                dadosParaSalvar.add(dicionarioDTO);
+            } else if (!dicionarioDTO.getNomeArquivo().equals(dicionarioComparacao.getNomeArquivo())) {
+                logger.info("Dicionário atualizado identificado",
+                        kv("nome_arquivo", dicionarioDTO.getNomeArquivo()),
+                        kv("tipo_operacao", "atualizacao"));
+                dadosParaSalvar.add(dicionarioDTO);
             }
-            return dicionarioDTOList;
-      }
+        }
 
-      public void salvarDicionarioBanco() {
-            logger.info("Iniciando sincronização dicionário");
-
-            List<DicionarioDTO> listaDados = apiService.getDicionarioAPIBH();
-            List<DicionarioEntity> dadosExistentes = dicionarioRepository.findAll();
-            logger.info("Estado inicial do banco", kv("total_existente", dadosExistentes.size()));
-
-            Map<String, DicionarioEntity> dicionarioMap = dadosExistentes.stream()
-                        .collect(Collectors.toMap(DicionarioEntity::getIdDicionario,
-                                    dicionarioEntity -> dicionarioEntity));
-
-            List<DicionarioDTO> dadosParaSalvar = new ArrayList<>();
-
-            for (DicionarioDTO dicionarioDTO : listaDados) {
-                  DicionarioEntity dicionarioComparacao = dicionarioMap.get(dicionarioDTO.getId());
-
-                  if (dicionarioComparacao == null) {
-                        logger.info("Novo dicionário identificado", 
-                            kv("nome_arquivo", dicionarioDTO.getNomeArquivo()), 
-                            kv("tipo_operacao", "insercao"));
-                        dadosParaSalvar.add(dicionarioDTO);
-                  } else if (!dicionarioDTO.getNomeArquivo().equals(dicionarioComparacao.getNomeArquivo())) {
-                        logger.info("Dicionário atualizado identificado", 
-                            kv("nome_arquivo", dicionarioDTO.getNomeArquivo()), 
-                            kv("tipo_operacao", "atualizacao"));
-                        dadosParaSalvar.add(dicionarioDTO);
-                  }
-            }
-
-            if (!dadosParaSalvar.isEmpty()) {
-                  dicionarioRepository
-                              .saveAll(modelMapper.map(dadosParaSalvar, new TypeToken<List<DicionarioEntity>>() {
-                              }.getType()));
-                  logger.info("Sincronização de dicionário concluída. Total de itens processados: {}", dadosParaSalvar.size(), kv("total_processado", dadosParaSalvar.size()));
-            } else {
-                  logger.info("Nenhuma alteração necessária no dicionário");
-            }
-      }
+        if (!dadosParaSalvar.isEmpty()) {
+            dicionarioRepository
+                    .saveAll(modelMapper.map(dadosParaSalvar, new TypeToken<List<DicionarioEntity>>() {
+                    }.getType()));
+            logger.info("Sincronização de dicionário concluída. Total de itens processados: {}", dadosParaSalvar.size(), kv("total_processado", dadosParaSalvar.size()));
+        } else {
+            logger.info("Nenhuma alteração necessária no dicionário");
+        }
+    }
 
 }

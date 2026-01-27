@@ -10,6 +10,8 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -38,6 +40,7 @@ public class OnibusService {
     }
 
 
+    @Cacheable(value = "onibus")
     public List<OnibusDTO> listarTodosOnibus() {
         List<LinhaEntity> linhas = linhasRepository.findAll();
 
@@ -56,6 +59,7 @@ public class OnibusService {
                 }).collect(Collectors.toList());
     }
 
+    @Cacheable(value = "onibusPorLinha", key = "#numeroLinha")
     public List<CoordenadaDTO> listarPorNumeroLinha(Integer numeroLinha, Optional<Integer> sentido) {
         Optional<LinhaEntity> linha = linhasRepository.findByNumeroLinha(numeroLinha);
 
@@ -79,6 +83,7 @@ public class OnibusService {
         return coordenadas;
     }
 
+    @CacheEvict(value = {"onibus", "onibusPorLinha"}, allEntries = true)
     public void salvaCoordenadas(List<CoordenadaDTO> todasCoordenadasNovas) {
         logger.info("Iniciando o salvamento das coordenadas...");
         List<LinhaEntity> linhasExistentes;
@@ -98,7 +103,7 @@ public class OnibusService {
             logger.info("Nenhuma coordenada nova encontrada. Executando apenas limpeza por TTL.");
             mapaNovasCoordenadasPorLinha = Collections.emptyMap();
         } else {
-             mapaNovasCoordenadasPorLinha = todasCoordenadasNovas.stream()
+            mapaNovasCoordenadasPorLinha = todasCoordenadasNovas.stream()
                     .collect(Collectors.toMap(
                             CoordenadaDTO::getNumeroVeiculo,
                             Function.identity(),
@@ -114,7 +119,7 @@ public class OnibusService {
 
         for (LinhaEntity linha : linhasExistentes) {
             boolean houveAlteracao = false;
-            
+
             Map<String, CoordenadaDTO> veiculosMap = new HashMap<>();
             if (linha.getCoordenadas() != null) {
                 for (CoordenadaDTO c : linha.getCoordenadas()) {
@@ -137,7 +142,7 @@ public class OnibusService {
             List<CoordenadaDTO> veiculosAtualizados = veiculosMap.values().stream()
                     .filter(c -> c.getHorario() != null && c.getHorario().isAfter(dataLimite))
                     .collect(Collectors.toList());
-            
+
             if (tamanhoAntes != veiculosAtualizados.size()) houveAlteracao = true;
 
             if (houveAlteracao) {
@@ -150,7 +155,7 @@ public class OnibusService {
                         .toList();
 
                 linha.setSentidoIsUnique(!sentidos.isEmpty() && sentidos.size() == 1);
-                
+
                 linhasParaSalvar.add(linha);
             }
         }

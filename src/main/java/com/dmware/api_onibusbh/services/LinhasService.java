@@ -10,12 +10,15 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
@@ -34,6 +37,7 @@ public class LinhasService {
         this.apiService = apiService;
     }
 
+    @Cacheable(value = "linhas")
     public List<LinhaDTO> fetchLinhas() {
         List<LinhaEntity> linhaEntities = linhasRepository.findAll();
 
@@ -44,6 +48,7 @@ public class LinhasService {
         }.getType());
     }
 
+    @Cacheable(value = "linhasCoordenadas")
     public List<LinhaDTO> fetchLinhasCoordenadasNotEmpty() {
         List<LinhaEntity> linhaEntities = linhasRepository.findLinhasWithCoordenadas();
 
@@ -52,12 +57,7 @@ public class LinhasService {
         }
 
         // Filtra apenas as linhas que possuem coordenadas válidas
-        List<LinhaEntity> linhasFiltradas = linhaEntities.stream()
-                .filter(linha -> linha.getCoordenadas() != null &&
-                        linha.getCoordenadas().stream()
-                                .anyMatch(coord -> coord.getSentido() != null &&
-                                        (coord.getSentido() == '1' || coord.getSentido() == '2')))
-                .toList();
+        List<LinhaEntity> linhasFiltradas = linhaEntities.stream().filter(linha -> linha.getCoordenadas() != null && linha.getCoordenadas().stream().anyMatch(coord -> coord.getSentido() != null && (coord.getSentido() == '1' || coord.getSentido() == '2'))).toList();
 
         if (linhasFiltradas.isEmpty()) {
             throw new LinhasNotFoundException();
@@ -67,7 +67,14 @@ public class LinhasService {
         }.getType());
     }
 
+    @Scheduled(fixedRate = 30, timeUnit = TimeUnit.MINUTES)
+    @CacheEvict(value = "linhasCoordenadas", allEntries = true)
+    public void limparCacheLinhasCoordenadas() {
+        logger.info("Cache de linhas com coordenadas limpo.");
+    }
 
+
+    @Cacheable(value = "linha", key = "#numeroLinha")
     public LinhaDTO listarLinhaPorNumero(Integer numeroLinha) {
         Optional<LinhaEntity> linhaEntity = linhasRepository.findByNumeroLinha(numeroLinha);
 
@@ -77,26 +84,23 @@ public class LinhasService {
         return modelMapper.map(linhaEntity.get(), LinhaDTO.class);
     }
 
+    @CacheEvict(value = {"linhas", "linha"}, allEntries = true)
     public void salvaLinhasNormais() {
         logger.info("Iniciando sincronização de linhas normais.");
         List<LinhaDTO> linhasDaAPI = apiService.getLinhasAPIBH();
         List<LinhaEntity> linhasExistentes = linhasRepository.findAll();
         logger.info("Estado inicial do banco", kv("total_existente", linhasExistentes.size()));
 
-        Map<Integer, LinhaEntity> linhasExistentesMap = linhasExistentes.stream()
-                .collect(Collectors.toMap(LinhaEntity::getIdLinha, linha -> linha));
+        Map<Integer, LinhaEntity> linhasExistentesMap = linhasExistentes.stream().collect(Collectors.toMap(LinhaEntity::getIdLinha, linha -> linha));
 
-        List<LinhaEntity> linhasParaSalvar = linhasDaAPI.stream()
-                .map(l -> {
-                    l.setTipo(Tipo.NORMAL);
-                    return modelMapper.map(l, LinhaEntity.class);
-                })
-                .filter(linhaNova -> {
-                    LinhaEntity linhaExistente = linhasExistentesMap.get(linhaNova.getIdLinha());
+        List<LinhaEntity> linhasParaSalvar = linhasDaAPI.stream().map(l -> {
+            l.setTipo(Tipo.NORMAL);
+            return modelMapper.map(l, LinhaEntity.class);
+        }).filter(linhaNova -> {
+            LinhaEntity linhaExistente = linhasExistentesMap.get(linhaNova.getIdLinha());
 
-                    return linhaExistente == null || !linhaNova.getLinha().equals(linhaExistente.getLinha());
-                })
-                .toList();
+            return linhaExistente == null || !linhaNova.getLinha().equals(linhaExistente.getLinha());
+        }).toList();
 
         if (!linhasParaSalvar.isEmpty()) {
             linhasRepository.saveAll(linhasParaSalvar);

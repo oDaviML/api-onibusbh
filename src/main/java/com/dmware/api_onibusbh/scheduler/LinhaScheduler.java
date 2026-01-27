@@ -1,15 +1,13 @@
 package com.dmware.api_onibusbh.scheduler;
 
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
+import com.dmware.api_onibusbh.services.LinhasService;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.dmware.api_onibusbh.services.LinhasService;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class LinhaScheduler {
@@ -33,5 +31,4 @@ public class LinhaScheduler {
             MDC.clear();
         }
     }
-
 }

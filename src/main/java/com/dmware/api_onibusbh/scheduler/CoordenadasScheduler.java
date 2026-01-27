@@ -1,18 +1,15 @@
 package com.dmware.api_onibusbh.scheduler;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
 import com.dmware.api_onibusbh.dto.CoordenadaDTO;
 import com.dmware.api_onibusbh.services.APIService;
+import com.dmware.api_onibusbh.services.OnibusService;
 import org.slf4j.MDC;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.dmware.api_onibusbh.services.OnibusService;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class CoordenadasScheduler {
@@ -38,5 +35,4 @@ public class CoordenadasScheduler {
             MDC.clear();
         }
     }
-
 }

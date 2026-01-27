@@ -7,19 +7,21 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter@Setter
-@AllArgsConstructor@NoArgsConstructor
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class DicionarioDTO {
 
-      @JsonProperty("id")
-      @JsonAlias("_id")
-      private String id;
+    @JsonProperty("id")
+    @JsonAlias("_id")
+    private String id;
 
-      @JsonProperty("nomeArquivo")
-      @JsonAlias("Nome_do_arquivo")
-      private String nomeArquivo;
+    @JsonProperty("nomeArquivo")
+    @JsonAlias("Nome_do_arquivo")
+    private String nomeArquivo;
 
-      @JsonProperty("descricao")
-      @JsonAlias("tempo_real_convencional_xxx_ddmmaahhmmss.xxx")
-      private String descricao;
+    @JsonProperty("descricao")
+    @JsonAlias("tempo_real_convencional_xxx_ddmmaahhmmss.xxx")
+    private String descricao;
 }

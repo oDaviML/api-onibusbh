@@ -1,23 +1,22 @@
 package com.dmware.api_onibusbh.services;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.dmware.api_onibusbh.dto.CoordenadaDTO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-
 import com.dmware.api_onibusbh.dto.DicionarioDTO;
 import com.dmware.api_onibusbh.dto.LinhaDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class APIService {
@@ -43,7 +42,8 @@ public class APIService {
             JsonNode rootNode = objectMapper.readTree(json);
             JsonNode recordsNode = rootNode.path("result").path("records");
 
-            return objectMapper.convertValue(recordsNode, new TypeReference<List<DicionarioDTO>>() {});
+            return objectMapper.convertValue(recordsNode, new TypeReference<List<DicionarioDTO>>() {
+            });
 
         } catch (JsonProcessingException | WebClientResponseException e) {
             throw new RuntimeException(e);
@@ -61,7 +61,8 @@ public class APIService {
             JsonNode rootNode = objectMapper.readTree(json);
             JsonNode recordsNode = rootNode.path("result").path("records");
 
-            return objectMapper.convertValue(recordsNode, new TypeReference<List<LinhaDTO>>() {});
+            return objectMapper.convertValue(recordsNode, new TypeReference<List<LinhaDTO>>() {
+            });
 
         } catch (JsonProcessingException | WebClientResponseException e) {
             throw new RuntimeException(e);
@@ -106,13 +107,14 @@ public class APIService {
         List<CoordenadaDTO> todasCoordenadas = new ArrayList<>();
 
         try {
-            TypeReference<List<CoordenadaDTO>> typeRef = new TypeReference<>() {};
-            
+            TypeReference<List<CoordenadaDTO>> typeRef = new TypeReference<>() {
+            };
+
             List<CoordenadaDTO> listD = objectMapper.readValue(jsonD, typeRef);
             List<CoordenadaDTO> listSD = objectMapper.readValue(jsonSD, typeRef);
 
-            if(listD != null) todasCoordenadas.addAll(listD);
-            if(listSD != null) todasCoordenadas.addAll(listSD);
+            if (listD != null) todasCoordenadas.addAll(listD);
+            if (listSD != null) todasCoordenadas.addAll(listSD);
 
             return todasCoordenadas;
 
