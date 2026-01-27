@@ -1,13 +1,11 @@
 package com.dmware.api_onibusbh.services;
 
-import com.dmware.api_onibusbh.config.WebClientConfig;
 import com.dmware.api_onibusbh.dto.CoordenadaDTO;
 import com.dmware.api_onibusbh.dto.OnibusDTO;
 import com.dmware.api_onibusbh.entities.LinhaEntity;
 import com.dmware.api_onibusbh.exceptions.CoordenadasNotFoundException;
 import com.dmware.api_onibusbh.exceptions.LinhaNotFoundException;
 import com.dmware.api_onibusbh.repositories.LinhasRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,12 +31,10 @@ public class OnibusService {
 
     private final LinhasRepository linhasRepository;
     private final ModelMapper modelMapper;
-    private final ObjectMapper objectMapper;
 
-    public OnibusService(LinhasService linhasService, WebClientConfig webClientConfig, LinhasRepository linhasRepository, ModelMapper modelMapper, ObjectMapper objectMapper) {
+    public OnibusService(LinhasRepository linhasRepository, ModelMapper modelMapper) {
         this.linhasRepository = linhasRepository;
         this.modelMapper = modelMapper;
-        this.objectMapper = objectMapper;
     }
 
 

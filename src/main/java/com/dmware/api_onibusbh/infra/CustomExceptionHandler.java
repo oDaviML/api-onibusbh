@@ -75,4 +75,12 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
         logger.warn("Recurso não encontrado", kv("exception", ex.getClass().getSimpleName()), kv("status", HttpStatus.NOT_FOUND));
         return ErrorResponse.of("Verifique a rota digitada ou os dados enviados", HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> rateLimitExceededException(RateLimitExceededException ex) {
+        logger.warn("Rate limit excedido", kv("exception", ex.getClass().getSimpleName()), kv("status", HttpStatus.TOO_MANY_REQUESTS), kv("retry_after", ex.getRetryAfterSeconds()));
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("X-Rate-Limit-Retry-After-Seconds", String.valueOf(ex.getRetryAfterSeconds()))
+                .body(new ErrorResponse(java.time.LocalDateTime.now(), ex.getMessage(), HttpStatus.TOO_MANY_REQUESTS));
+    }
 }

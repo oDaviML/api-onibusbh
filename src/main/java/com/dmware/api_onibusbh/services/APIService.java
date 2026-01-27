@@ -69,7 +69,6 @@ public class APIService {
     }
 
     public List<CoordenadaDTO> getOnibusCoordenadaBH() {
-        logger.info("Acessando diretamente.");
         List<String> responses = fetchCoordenadasDirectly();
 
         if (responses == null || responses.size() < 2) {
