@@ -30,7 +30,7 @@ public class LinhaScheduler {
             logger.info("Job agendado iniciado: Atualização de Coordenadas/Linhas.", kv("job_name", "Linhas"), kv("status", "STARTED"));
             linhasService.salvaLinhasNormais();
             long duration = System.currentTimeMillis() - startTime;
-            logger.info("Job agendado finalizado: Atualização de Coordenadas/Linhas.", 
+            logger.info("Job agendado finalizado: Atualização de Coordenadas/Linhas | Tempo: {}ms", duration,
                 kv("job_name", "Linhas"), 
                 kv("status", "FINISHED"), 
                 kv("duration_ms", duration));

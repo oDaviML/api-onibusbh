@@ -30,7 +30,7 @@ public class DicionarioScheduler {
             logger.info("Job de Dicionário iniciado.", kv("job_name", "Dicionario"), kv("status", "STARTED"));
             dicionarioService.salvarDicionarioBanco();
             long duration = System.currentTimeMillis() - startTime;
-            logger.info("Job de Dicionário finalizado.", 
+            logger.info("Job de Dicionário finalizado | Tempo: {}ms", duration,
                 kv("job_name", "Dicionario"), 
                 kv("status", "FINISHED"), 
                 kv("duration_ms", duration));

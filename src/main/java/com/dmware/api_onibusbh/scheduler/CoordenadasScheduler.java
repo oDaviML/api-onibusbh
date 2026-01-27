@@ -34,7 +34,7 @@ public class CoordenadasScheduler {
             List<CoordenadaDTO> coordenadas = apiService.getOnibusCoordenadaBH();
             onibusService.salvaCoordenadas(coordenadas);
             long duration = System.currentTimeMillis() - startTime;
-            logger.info("Job de Coordenadas finalizado.", 
+            logger.info("Job de Coordenadas finalizado | Tempo: {}ms", duration,
                 kv("job_name", "Coordenadas"), 
                 kv("status", "FINISHED"), 
                 kv("duration_ms", duration));

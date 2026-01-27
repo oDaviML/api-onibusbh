@@ -37,7 +37,8 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 
         try {
             String clientIp = ClientIpUtils.getClientIp(request);
-            logger.info("Requisição recebida: {} {}", request.getMethod(), request.getRequestURI(),
+            logger.info("Requisição recebida | {} {} | IP: {} | UA: {}",
+                    request.getMethod(), request.getRequestURI(), clientIp, request.getHeader("User-Agent"),
                     kv("method", request.getMethod()),
                     kv("uri", request.getRequestURI()),
                     kv("client_ip", clientIp),
@@ -48,10 +49,11 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 
             long duration = System.currentTimeMillis() - startTime;
 
-            logger.info("Requisição finalizada: {} {} - Status: {} - Tempo: {}ms",
+            logger.info("Requisição finalizada | {} {} | Status: {} | IP: {} | Tempo: {}ms",
                     request.getMethod(),
                     request.getRequestURI(),
                     response.getStatus(),
+                    clientIp,
                     duration,
                     kv("status_code", response.getStatus()),
                     kv("duration_ms", duration),
