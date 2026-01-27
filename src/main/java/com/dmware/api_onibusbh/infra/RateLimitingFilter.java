@@ -40,7 +40,16 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String clientIp = request.getRemoteAddr();
+        String clientIp = request.getHeader("CF-Connecting-IP");
+        if (clientIp == null || clientIp.isEmpty()) {
+            clientIp = request.getHeader("X-Forwarded-For");
+            if (clientIp != null && !clientIp.isEmpty()) {
+                clientIp = clientIp.split(",")[0].trim();
+            }
+        }
+        if (clientIp == null || clientIp.isEmpty()) {
+            clientIp = request.getRemoteAddr();
+        }
         Bucket bucket = buckets.computeIfAbsent(clientIp, this::createNewBucket);
 
         ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
