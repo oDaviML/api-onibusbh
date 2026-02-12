@@ -86,6 +86,12 @@ public class OnibusService {
     @CacheEvict(value = {"onibus", "onibusPorLinha"}, allEntries = true)
     public void salvaCoordenadas(List<CoordenadaDTO> todasCoordenadasNovas) {
         logger.info("Iniciando o salvamento das coordenadas...");
+
+        if (todasCoordenadasNovas == null || todasCoordenadasNovas.isEmpty()) {
+            logger.error("Lista de coordenadas está vazia ou nula. Abortando salvamento para preservar dados existentes.");
+            return;
+        }
+
         List<LinhaEntity> linhasExistentes;
         try {
             linhasExistentes = linhasRepository.findAll();

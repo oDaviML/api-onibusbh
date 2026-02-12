@@ -17,6 +17,8 @@ import java.io.IOException;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
+import com.dmware.api_onibusbh.exceptions.CoordenadasApiIntegrationException;
+
 @ControllerAdvice
 public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
@@ -166,6 +168,23 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                 .header("X-Rate-Limit-Retry-After-Seconds", String.valueOf(ex.getRetryAfterSeconds()))
                 .body(new ErrorResponse(java.time.LocalDateTime.now(), ex.getMessage(), HttpStatus.TOO_MANY_REQUESTS));
+    }
+
+    @ExceptionHandler(CoordenadasApiIntegrationException.class)
+    public ResponseEntity<ErrorResponse> coordenadasApiIntegrationException(CoordenadasApiIntegrationException ex, HttpServletRequest request) {
+        String clientIp = ClientIpUtils.getClientIp(request);
+        logger.error("Falha na integração com API externa | {} {} | IP: {} | Endpoint: {} | Tipo: {} | Mensagem: {}",
+                request.getMethod(), request.getRequestURI(), clientIp, ex.getEndpoint(), ex.getErrorType(), ex.getMessage(),
+                kv("exception", ex.getClass().getSimpleName()),
+                kv("status", HttpStatus.SERVICE_UNAVAILABLE),
+                kv("endpoint", ex.getEndpoint()),
+                kv("error_type", ex.getErrorType()),
+                kv("detail", ex.getMessage()),
+                kv("path", request.getRequestURI()),
+                kv("method", request.getMethod()),
+                kv("client_ip", clientIp),
+                ex);
+        return ErrorResponse.of("Falha na comunicação com serviço externo. Os dados existentes foram preservados.", HttpStatus.SERVICE_UNAVAILABLE);
     }
 
 }
