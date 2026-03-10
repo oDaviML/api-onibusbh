@@ -3,6 +3,7 @@ package com.dmware.api_onibusbh.config;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -16,6 +17,12 @@ import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class WebClientConfig {
+
+    @Value("${proxy.base-url}")
+    private String proxyBaseUrl;
+
+    @Value("${proxy.secret-token}")
+    private String proxySecretToken;
 
     @Bean
     public WebClient webClient() {
@@ -32,6 +39,8 @@ public class WebClientConfig {
                         .addHandlerLast(new WriteTimeoutHandler(10, TimeUnit.SECONDS)));
 
         return WebClient.builder()
+                .baseUrl(proxyBaseUrl)
+                .defaultHeader("X-API-Key", proxySecretToken)
                 .defaultHeader(HttpHeaders.USER_AGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36")
                 .defaultHeader(HttpHeaders.REFERER, "https://dados.pbh.gov.br/")
                 .exchangeStrategies(strategies)

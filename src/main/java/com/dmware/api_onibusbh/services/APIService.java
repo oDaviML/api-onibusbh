@@ -35,10 +35,10 @@ public class APIService {
     }
 
     public List<DicionarioDTO> getDicionarioAPIBH() {
-        String endpoint = "ckan.pbh.gov.br/dicionario";
+        String endpoint = "/dicionario";
         try {
             String json = webClient.get()
-                    .uri("https://ckan.pbh.gov.br/api/3/action/datastore_search?resource_id=825337e5-8cd5-43d9-ac52-837d80346721&limit=20")
+                    .uri(endpoint)
                     .retrieve()
                     .bodyToMono(String.class)
                     .onErrorResume(e -> {
@@ -60,10 +60,10 @@ public class APIService {
     }
 
     public List<LinhaDTO> getLinhasAPIBH() {
-        String endpoint = "ckan.pbh.gov.br/linhas";
+        String endpoint = "/linhas";
         try {
             String json = webClient.get()
-                    .uri("https://ckan.pbh.gov.br/api/3/action/datastore_search?resource_id=150bddd0-9a2c-4731-ade9-54aa56717fb6&limit=3000")
+                    .uri(endpoint)
                     .retrieve()
                     .bodyToMono(String.class)
                     .onErrorResume(e -> {
@@ -88,7 +88,7 @@ public class APIService {
         List<String> responses = fetchCoordenadasDirectly();
 
         if (responses == null || responses.size() < 2) {
-            throw new CoordenadasApiIntegrationException("Resposta incompleta das APIs de coordenadas", "temporeal.pbh.gov.br", "IncompleteResponse", null);
+            throw new CoordenadasApiIntegrationException("Resposta incompleta das APIs de coordenadas", "/coordenadas", "IncompleteResponse", null);
         }
 
         String jsonD = responses.get(0);
@@ -96,7 +96,7 @@ public class APIService {
 
         if ("[]".equals(jsonD) && "[]".equals(jsonSD)) {
             logger.warn("Ambas as APIs de coordenadas retornaram vazio");
-            throw new CoordenadasApiIntegrationException("APIs de coordenadas retornaram dados vazios", "temporeal.pbh.gov.br", "EmptyResponse", null);
+            throw new CoordenadasApiIntegrationException("APIs de coordenadas retornaram dados vazios", "/coordenadas", "EmptyResponse", null);
         }
 
         return processAndReturnCoordenadas(responses);
@@ -104,21 +104,21 @@ public class APIService {
 
     private List<String> fetchCoordenadasDirectly() {
         Mono<String> monoParamD = webClient.get()
-                .uri("https://temporeal.pbh.gov.br/?param=D")
+                .uri("/coordenadas?param=D")
                 .retrieve()
                 .bodyToMono(String.class)
                 .onErrorResume(e -> {
                     logger.error("Erro ao buscar coordenadas D", kv("param", "D"), kv("error", e.getMessage()));
-                    return Mono.error(new CoordenadasApiIntegrationException("Falha ao buscar coordenadas D", "temporeal.pbh.gov.br/?param=D", e.getClass().getSimpleName(), e));
+                    return Mono.error(new CoordenadasApiIntegrationException("Falha ao buscar coordenadas D", "/coordenadas?param=D", e.getClass().getSimpleName(), e));
                 });
 
         Mono<String> monoParamSD = webClient.get()
-                .uri("https://temporeal.pbh.gov.br/?param=SD")
+                .uri("/coordenadas?param=SD")
                 .retrieve()
                 .bodyToMono(String.class)
                 .onErrorResume(e -> {
                     logger.error("Erro ao buscar coordenadas SD", kv("param", "SD"), kv("error", e.getMessage()));
-                    return Mono.error(new CoordenadasApiIntegrationException("Falha ao buscar coordenadas SD", "temporeal.pbh.gov.br/?param=SD", e.getClass().getSimpleName(), e));
+                    return Mono.error(new CoordenadasApiIntegrationException("Falha ao buscar coordenadas SD", "/coordenadas?param=SD", e.getClass().getSimpleName(), e));
                 });
 
         return Flux.mergeSequential(monoParamD, monoParamSD).collectList().block();
@@ -142,7 +142,7 @@ public class APIService {
             return todasCoordenadas;
 
         } catch (JsonProcessingException e) {
-            throw new CoordenadasApiIntegrationException("Erro ao processar JSON das coordenadas", "temporeal.pbh.gov.br", "JsonProcessingException", e);
+            throw new CoordenadasApiIntegrationException("Erro ao processar JSON das coordenadas", "/coordenadas", "JsonProcessingException", e);
         }
     }
 }
