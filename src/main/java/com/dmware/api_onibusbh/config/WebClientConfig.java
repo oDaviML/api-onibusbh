@@ -41,7 +41,7 @@ public class WebClientConfig {
         return WebClient.builder()
                 .baseUrl(proxyBaseUrl)
                 .defaultHeader("X-API-Key", proxySecretToken)
-                .defaultHeader(HttpHeaders.USER_AGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36")
+                .defaultHeader(HttpHeaders.USER_AGENT, "api-onibusbh-backend/1.0")
                 .defaultHeader(HttpHeaders.REFERER, "https://dados.pbh.gov.br/")
                 .exchangeStrategies(strategies)
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
